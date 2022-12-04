@@ -1,0 +1,7 @@
+# Ignore everything else like cache directories...
+*
+
+# Except for these:
+!.gitignore
+!config.org
+!init.el

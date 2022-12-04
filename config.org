@@ -1,0 +1,684 @@
+#+TITLE: Finnbyte's Emacs config
+#+AUTHOR: Finnbyte
+#+PROPERTY: header-args :tangle config.el 
+
+*All of the headings grouped by functionality provided*
+| Introduction                                    | Introductes my point of view about Emacs                                       |
+|                                                 |                                                                                |
+| Graphical User Interface                        | Vanilla Emacs GUI beautification                                               |
+| General Emacs Behavior                          | Disabling or enabling design choices in Vanilla Emacs                          |
+|                                                 |                                                                                |
+| Functions used for variety of stuff             | Functions i've found or created which do useful things                         |
+|                                                 |                                                                                |
+| Manually loading .el files                      | Adding manually installed .el files to loadpath and set-up                     |
+| Setting up manually installed .el files         | Setting up functions or variables in those .el files                           |
+|                                                 |                                                                                |
+| Initializing package management                 | Initialize vanilla emacs package manager and ensure use-package installed      |
+| Install and configure packages with use-package | All installed packages are defined here, and configured.                       |
+|                                                 |                                                                                |
+| Keybindings                                     | Setting up keybindings, both evil and non-evil, for various functions          |
+|                                                 |                                                                                |
+| Configuring external programs                   | Configuring kind of the big not-text-editing related programs I have installed |
+|                                                 |                                                                                |
+| Settings set by Customize                       | Probably unimportant stuff you don't have to touch since I don't use customize |
+
+
+* Introduction
+
+Welcome to my poggers configuration file for emacs!
+I want a minimal and really vi-style emacs. I love emacs for
+it's extensibility and the feeling of having everything "close by".
+
+I totally agree on people saying "Do not use Emacs distributions, Emacs is designed to be modified by *you*"
+That's why I wanted to learn Emacs from scratch and get a firm understanding of it :D
+
+Next few categories control vanilla emacs things already built in.
+For example fonts or line numbers, which have extensive support in vanilla Emacs!
+
+* Graphical User Interface
+** Truncate lines by default
+#+begin_src elisp 
+(setq truncate-lines t)
+#+end_src
+** Setting a clear to see font
+Height 143 is roughly 12-13px font size
+
+#+begin_src emacs-lisp
+;; Consolas is what VSCode uses for example. Very modern and clean.
+(set-face-attribute 'default nil
+                    :family "Consolas"
+                    :height 143
+                    :weight 'normal
+                    :width 'normal)
+#+end_src
+
+** Enabling hybrid line numbers
+#+begin_src emacs-lisp
+;; (display-line-numbers-type 'visual)
+;; (global-display-line-numbers-mode t)
+#+end_src
+
+#+RESULTS:
+: t
+
+** Variety of graphical beautifying
+#+begin_src emacs-lisp
+;; Disabling unimportant GUI stuff
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+
+;; Give some breathing room to edges
+;; (set-fringe-mode 10)
+
+;; Always show new lines below cursor
+;; (setq scroll-margin 7)
+
+;; Hightlight entire line cursor is on
+(global-hl-line-mode)
+#+end_src       
+
+#+RESULTS:
+: t
+
+* General Emacs Behavior
+** Clipboard more like Vim
+#+begin_src elisp 
+(setq x-select-enable-clipboard nil)
+#+end_src
+
+#+RESULTS:
+
+** Do not create backup files
+#+begin_src elisp 
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+#+end_src
+
+** Give focus to help windows
+#+begin_src elisp 
+;; Always gives focus to help windows
+(setq help-window-select t)
+#+end_src
+** Only pop up warning buffer if Emacs had errors
+#+begin_src elisp
+(setq warning-minimum-level :error)
+#+end_src
+
+#+RESULTS:
+: :error
+
+** Use y/n instead of yes/no on minibuffer prompts
+#+begin_src  elisp
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+
+** Makes apropos useful and to search extensively
+#+begin_src elisp
+(setq apropos-do-all t)
+#+end_src
+
+#+RESULTS:
+: t
+
+** Disables gibberish backup files
+#+begin_src emacs-lisp
+(setq make-backup-files nil)
+#+end_src        
+
+** Melpa doesn't work without this, downgrades TLS connection
+I don't think you should touch this, package downloading didn't work for me before putting this in.
+#+begin_src emacs-lisp
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+#+end_src       
+
+* Functions used for variety of stuff
+#+begin_src emacs-lisp
+;; Functions
+(defun kill-other-buffers ()
+  "kill all other buffers."
+   (interactive)
+   (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+
+(defun org-rid-of-results ()
+  "Gets rid of results from org-babel-tangle."
+  (interactive)
+  (mark-whole-buffer)
+  (delete-matching-lines ".*#\+RESULTS:" nil nil t))
+
+(defun create-scratch-buffer nil
+       "create a scratch buffer"
+       (interactive)
+       (switch-to-buffer (get-buffer-create "*scratch*"))
+       (lisp-interaction-mode))   
+
+(defun eval-config ()
+  "Evaluate config.el, which hosts my configuration code"
+  (interactive)
+  (load-file (expand-file-name "config.el" user-emacs-directory)))
+  
+(defun get-file-extension-of-current-file ()
+  "Gets file extension of arg"
+  (substring (buffer-name) -3))
+
+(defun automatic-babel-tangle ()
+  "Automatically org-babel-tangles if document ends in .org"
+  (if
+    (string= "org" (get-file-extension-of-current-file))
+    (org-babel-tangle)))
+
+(defun swap-buffers-in-windows ()
+  "Put the buffer from the selected window in next window, and vice versa"
+  (interactive)
+  (let* ((this (selected-window))
+     (other (next-window))
+     (this-buffer (window-buffer this))
+     (other-buffer (window-buffer other)))
+    (set-window-buffer other this-buffer)
+    (set-window-buffer this other-buffer)))
+#+end_src
+
+* Manually loading .el files
+#+begin_src emacs-lisp
+  (defun initialize-external ()
+    "Loads and requres manually installed .el files. This is especially important if I ever decide to use my config.{el, org} in some other setup, my Emacs has to be able to know if \"external \" folder exists."
+  
+    ;; Add everything in dir and its subdirectories to load-path
+    (let ((default-directory  "~/.emacs.d/external/"))
+      (normal-top-level-add-subdirs-to-load-path))
+
+    ;; Really useful
+    (add-to-list 'load-path "~/.emacs.d/external/ace-jump/ace-jump-mode.el")
+    ;; Match parens, brackets etc
+    (add-to-list 'load-path "~/.emacs.d/external/autopair/")
+
+    ;; Multiple scratch buffers
+    (add-to-list 'load-path "~/.emacs.d/external/multi-scratch/")
+
+    ;; Hare language mode
+    (add-to-list 'load-path "~/.emacs.d/external/hare-mode/")
+    ;; Odin language mode
+    (add-to-list 'load-path "~/.emacs.d/external/odin-mode/")
+
+
+    ;; Loading highlight-current-line
+    ;; Load autopair
+    (require 'autopair)
+
+    ;; Multiple scratch buffers
+    (require 'multi-scratch)
+
+    ;; Programming language support
+    (require 'hare-mode)
+    (require 'odin-mode))
+
+(when (file-directory-p (expand-file-name "external" user-emacs-directory))
+    (initialize-external))
+#+end_src
+
+* Setting up manually installed .el files
+** Ace jump
+#+begin_src elisp
+;; Autoload "Emacs quick move minor mode"
+(autoload 'ace-jump-mode "ace-jump-mode" t)
+;; you can select the key you prefer to
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+#+end_src
+
+** Autopair
+#+begin_src elisp 
+(autopair-global-mode 1)
+#+end_src
+
+* Initializing package management
+** Adds two repositories to be used and initializes required functions
+#+begin_src emacs-lisp
+(require 'package)
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+#+end_src
+
+#+RESULTS:
+
+** Setting up use-package macro
+First off, we want to make sure it's installed. If not, install it via vanilla Emacs package-install.
+Secondly, we want to require it so it can be used later on.
+Thirdly, we have to set a variable to be true, in order to enable global ensuration of installed packages.
+
+#+begin_src emacs-lisp
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure 't)
+#+end_src
+
+#+RESULTS:
+: t
+
+* Install and configure packages with use-package
+** Evil
+#+begin_src elisp 
+(use-package evil
+  :init
+  ;; These make evil-collection work :D
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  :custom
+  (evil-undo-system 'undo-fu)
+  :config
+  (evil-mode 1))
+#+end_src
+** Evil-collection
+#+begin_src elisp 
+;; Evil keybindings for multitude of programs
+(use-package evil-collection
+  :after evil
+  ;; Enables vi-modes in minibuffers, not a fan myself.
+  ;; :custom (evil-collection-setup-minibuffer t)
+  :config
+  (evil-collection-init))
+#+end_src
+** General (keybinding manager)
+#+begin_src elisp 
+(use-package general
+  :config
+  (general-evil-setup))
+#+end_src
+
+** Making emacs into a hardcore and efficient IDE
+#+begin_src emacs-lisp
+;; Better linear undo/redo
+(use-package undo-fu)
+
+;; Clean modeline
+(use-package doom-modeline
+  :config
+  (doom-modeline-mode -1))
+
+;; Languge Server Protocol (programming godsent)
+;; I choose eglot over LSP because minimalism
+(use-package eglot)
+
+;; Show indentations
+(use-package highlight-indent-guides
+   :custom
+   (highlight-indent-guides-method 'character) 
+   :config
+   (highlight-indent-guides-mode 1))
+
+;; Sorting M-x results
+(use-package flx)
+
+;; Ivy does it all.
+(use-package ivy
+  :custom
+  ;; Setting ivy to be fuzzy
+  (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  :config
+  (ivy-mode))
+(use-package counsel)
+(use-package company
+  :init
+  (company-mode))
+
+;; Shows complete keybinds while typing
+(use-package which-key
+  :custom
+  (which-key-popup-type 'minibuffer)
+  :config
+  (which-key-mode))
+
+;; Shows where cursor goes
+(use-package beacon
+  :init
+  (beacon-mode 1))
+
+;; Efficient dashboard at startup
+(use-package dashboard
+  :config
+  (dashboard-setup-startup-hook))
+
+;; With one keybinding, spawn a temporary shell
+(use-package shell-pop
+  :custom
+  (shell-pop-term-shell "/bin/bash"))
+
+;; Vim Surround but in Emacs
+(use-package evil-surround 
+  :config
+  (global-evil-surround-mode 1))
+
+;; REPL for common lisp (((Going to test SLIME at some point too.)))
+(use-package sly
+  :pin melpa)
+
+#+end_src	
+
+** Org-mode
+#+begin_src emacs-lisp
+(use-package org
+  :custom
+  (org-startup-indented t)
+  (org-startup-folded t)
+  ;; Disable pesky confirm on elisp evaluation
+  (org-confirm-babel-evaluate nil)
+  ;; Source block indentation is wack by default
+  (org-src-preserve-indentation nil)
+  (org-src-tab-acts-natively t)
+  (org-src-strip-leading-and-trailing-blank-lines t)
+  (org-edit-src-content-indentation 0)
+  :hook (after-save . automatic-babel-tangle))
+  :config
+  ;; org-babel languages
+  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                           (C . t)
+							       (shell . t)))
+
+
+  ;; Unicode bullets instead of stars on headings
+(use-package org-bullets
+    :config
+      (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+  ;; Evil keybindings for org stuffs
+(use-package evil-org
+    :ensure t
+    :after org
+    :hook (org-mode . (lambda () evil-org-mode))
+    :config
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys))
+
+#+end_src	
+
+#+RESULTS:
+| (lambda nil evil-org-mode) | (lambda nil (org-bullets-mode 1)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] |
+
+** External programs
+#+begin_src emacs-lisp
+
+;; git client
+(use-package magit)
+
+;; News reader
+(use-package elfeed
+  :custom
+  ;; Cleaning up $HOME since automatically saves there
+  (elfeed-db-directory "~/.emacs.d/elfeed")
+  :config
+  ;; Set feeds to monitor
+  (setq elfeed-feeds
+      '("https://www.is.fi/rss/tuoreimmat.xml"
+        "https://reddit.com/r/linux.rss")))
+
+;; Getting forecasts in Emacs!
+(use-package wttrin
+  :config
+  (setq wttrin-default-cities '("Turku")))
+
+;; Media player
+(use-package emms
+  :config
+  (emms-minimalistic)
+  (emms-default-players)
+  :custom
+  (emms-info-asynchronously nil)
+  :pin melpa)
+
+;; Better terminal emulator than eshell
+;; (use-package vterm
+;;   :custom
+;;   ;; Use bash as default shell
+;;   (vterm-shell "/bin/bash")
+;;   :pin melpa)
+#+end_src
+
+** Misc
+This includes games or useful packages which can't be put into other categories.
+Also, a ton of random shinanigans and everything else 
+#+begin_src elisp 
+(use-package all-the-icons
+  :if (display-graphic-p))
+(use-package try)
+;; Integration with Discord (because flexing Emacs is fun!)
+(use-package elcord
+  :config (elcord-mode))
+#+end_src
+** Programming languages
+*** Golang
+#+begin_src elisp 
+(use-package go-mode)
+#+end_src
+*** Lua
+#+begin_src elisp 
+(use-package lua-mode)
+#+end_src
+*** Js
+#+begin_src elisp
+(use-package js2-mode)
+(use-package tern)
+#+end_src
+** Themes
+#+begin_src emacs-lisp
+(use-package dracula-theme)
+(use-package gruvbox-theme)
+(use-package doom-themes
+        :config
+	(setq doom-themes-enable-bold t
+	      doom-themes-enable-italics t))
+
+(load-theme 'doom-one t)
+#+end_src
+
+** NOT USING - Ido testing xd - NOT USING
+Used to test with ido, but decided ivy is more for me.
+I'm going to keep my ido settings here though, for future!
+
+These will not be tangled and therefore will never reach my actual config.el file.
+#+begin_src elisp :tangle no
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
+#+end_src
+
+* Keybindings
+** Keybindings not related to evil 
+With these, my fingers don't have to leave hjkl row on keyboard!
+#+begin_src elisp
+(general-define-key
+  :keymaps 'ivy-minibuffer-map
+  "C-j" 'ivy-next-line
+  "C-k" 'ivy-previous-line
+  "C-l" "RET")
+
+(general-define-key
+  :keymaps '(ido-common-completion-map ido-file-dir-completion-map)
+  "C-j" 'ido-next-match
+  "C-k" 'ido-prev-match)
+  
+#+end_src
+
+#+RESULTS:
+
+Make text larger with Ctrl + "+" and smaller with Ctrl + "-"
+It's a standard present in almost every other text editor, and I just want them so bad in Emacs!
+#+begin_src elisp 
+(general-define-key
+  "C-+" 'text-scale-increase
+  "C--" 'text-scale-decrease)
+#+end_src
+
+** Evil mode stuffs
+*** page up/page down
+#+begin_src elisp 
+(evil-define-key 'normal 'global (kbd "C-d") 'evil-scroll-down)
+(evil-define-key 'normal 'global (kbd "C-S-d") 'evil-scroll-up)
+#+end_src
+*** undo-fu redo instead of evil's
+undo-tree was pretty garbage and undo-redo didn't work expectly.
+#+begin_src elisp
+(evil-define-key 'normal 'global (kbd "C-r") 'undo-fu-only-redo)
+#+end_src
+
+*** Window navigation (C - h|j|k|l)
+Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it's ok to do this
+#+begin_src elisp 
+(general-define-key
+  :keymaps '(evil-normal-state-map)
+  "C-h" 'evil-window-left
+  "C-l" 'evil-window-right
+  "C-k" 'evil-window-up
+  "C-j" 'evil-window-down)
+#+end_src
+
+*** Toggle evil mode on and off
+#+begin_src elisp
+(define-key global-map (kbd "C-c e") 'evil-mode)
+#+end_src
+
+*** Make esc behave like it's supposed to in Vim, quits prompts etc.
+#+begin_src elisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+*** OLD - Make sure my personal evil keybinds are never overwritten by anything - OLD
+#+begin_src elisp
+(defvar my-intercept-mode-map (make-sparse-keymap)
+  "High precedence keymap.")
+
+(define-minor-mode my-intercept-mode
+  "Global minor mode for higher precedence evil keybindings."
+  :global t)
+
+(my-intercept-mode)
+
+(dolist (state '(normal visual insert))
+  (evil-make-intercept-map
+   ;; NOTE: This requires an evil version from 2018-03-20 or later
+   (evil-get-auxiliary-keymap my-intercept-mode-map state t t)
+   state))
+#+end_src
+
+#+RESULTS:
+
+** <SPC> keybindings 
+*** Define categories
+#+begin_src elisp
+(general-define-key
+:states '(normal visual)
+:keymaps 'override
+:prefix "SPC"
+;; Categories
+"h" '(help-command :which-key "Help")
+"b" '(:ignore t :which-key "Buffers")
+"b" '(:ignore t :which-key "Buffers")
+"g" '(:ignore t :which-key "Games")
+"a" '(:ignore t :which-key "Apps")
+"s" '(:ignore t :which-key "Shell")
+"f" '(:ignore t :which-key "Files")
+"e" '(:ignore t :which-key "Emacs/Elisp")
+"o" '(:ignore t :which-key "Org")
+#+end_src
+
+*** Define sub-categories
+#+begin_src elisp
+;; sub-categories
+"a m" '(:ignore t :which-key "Math")
+"o s" '(:ignore t :which-key "src")
+#+end_src
+
+*** Buffers
+#+begin_src elisp 
+"b s" '(counsel-switch-buffer :which-key "Switch buffers")
+"b b" '(ibuffer :which-key "Show buffer list")
+
+"b k" '(kill-this-buffer :which-key "Kill current buffer")
+
+"b n" '(switch-to-next-buffer :which-key "Switch to next buffer")
+"b p" '(switch-to-prev-buffer :which-key "Switch to previous buffer")
+
+;; Alternative command for switching (scrolling through) buffers quickly
+">" '(switch-to-next-buffer :which-key t)
+"<" '(switch-to-prev-buffer :which-key t)
+#+end_src
+*** Apps
+#+begin_src elisp
+"a m c" '(calculator :which-key "Simple calculator")
+"a m m" '(calc :which-key "Advanced calculator")
+#+end_src
+*** Games
+#+begin_src elisp 
+"g s" '(steam-launch :which-key "Launch a game on Steam")
+#+end_src
+
+*** Shell
+#+begin_src elisp 
+"s p" '(shell-pop :which-key "Pop up a shell") 
+"s v" '(vterm :which-key "vterm")
+"!" '(shell-command :which-key "Shell command")
+"\"" '(async-shell-command :which-key "Asynchronous shell command")
+#+end_src
+
+*** Files
+#+begin_src elisp 
+"." '(ido-find-file :which-key "Find file")
+"/" '(ido-dired :which-key "Find directory")
+"f r" '(counsel-recentf :which-key "Recent files")
+"f b" '(bookmark-jump :which-key "Browse bookmarks")
+"f s" '(save-buffer :which-key "Save current buffer")
+
+;; Alternative command for bookmarks
+"DEL" '(bookmark-jump :which-key "Browse bookmarks")
+#+end_src
+
+#+RESULTS:
+| save-buffer | :which-key | Save current buffer |
+
+*** Emacs/Elisp
+#+begin_src elisp 
+"RET" '(eval-defun :which-key "Evaluate expression")
+"e b" '(eval-buffer :which-key "Evaluate entire buffer")
+"e r" '(eval-region :which-key "Evaluate an region specified with visual-mode")
+"e l" '(eval-expression :which-key "Evaluate an elisp expression")
+"e e" '(eval-config :which-key "Reload config.el")
+#+end_src
+
+*** Org
+#+begin_src elisp 
+"o i" '(org-insert-structure-template :which-key "Insert org structure template")
+"o e" '(org-export-dispatch :which-key "Exports org-document to other fileformat")
+"o s e" '(org-edit-src-code :which-key "Edit src-code block")
+#+end_src
+
+*** Misc
+#+begin_src elisp 
+"p" '(counsel-M-x :which-key "M-x"))
+#+end_src
+
+* Settings set by Customize
+#+begin_src elisp
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("171d1ae90e46978eb9c342be6658d937a83aaa45997b1d7af7657546cae5985b" "7661b762556018a44a29477b84757994d8386d6edee909409fabe0631952dad9" default))
+ '(display-line-numbers-type 'visual)
+ '(global-display-line-numbers-mode t)
+ '(make-backup-files nil)
+ '(package-selected-packages
+   '(evil-org company beacon elfeed doom-modeline evil-collection counsel general which-key ivy gruvbox-theme use-package))
+ '(tool-bar-mode nil)
+ '(uniquify-buffer-name-style nil nil (uniquify)))
+(custom-set-faces)
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ #+end_src
+p 
