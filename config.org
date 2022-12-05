@@ -35,6 +35,15 @@ That's why I wanted to learn Emacs from scratch and get a firm understanding of 
 Next few categories control vanilla emacs things already built in.
 For example fonts or line numbers, which have extensive support in vanilla Emacs!
 
+* Stop bothering me custom
+I really don't like custom. It's hard to read and it's just a mess in my opinion.
+That is why I am setting custom to not bother me right away.
+
+This sets a place for custom settings but never loads it. To load it, you also need: (load custom-file)
+#+begin_src elisp
+(setq custom-file (expand-file-name ".custom-settings.el" user-emacs-directory))
+#+end_src
+
 * Graphical User Interface
 ** Truncate lines by default
 #+begin_src elisp 
@@ -54,13 +63,9 @@ Height 143 is roughly 12-13px font size
 
 ** Enabling hybrid line numbers
 #+begin_src emacs-lisp
-;; (display-line-numbers-type 'visual)
-;; (global-display-line-numbers-mode t)
+(setq display-line-numbers-type 'visual)
+(global-display-line-numbers-mode t)
 #+end_src
-
-#+RESULTS:
-: t
-
 ** Variety of graphical beautifying
 #+begin_src emacs-lisp
 ;; Disabling unimportant GUI stuff
@@ -179,58 +184,6 @@ I don't think you should touch this, package downloading didn't work for me befo
     (set-window-buffer this other-buffer)))
 #+end_src
 
-* Manually loading .el files
-#+begin_src emacs-lisp
-  (defun initialize-external ()
-    "Loads and requres manually installed .el files. This is especially important if I ever decide to use my config.{el, org} in some other setup, my Emacs has to be able to know if \"external \" folder exists."
-  
-    ;; Add everything in dir and its subdirectories to load-path
-    (let ((default-directory  "~/.emacs.d/external/"))
-      (normal-top-level-add-subdirs-to-load-path))
-
-    ;; Really useful
-    (add-to-list 'load-path "~/.emacs.d/external/ace-jump/ace-jump-mode.el")
-    ;; Match parens, brackets etc
-    (add-to-list 'load-path "~/.emacs.d/external/autopair/")
-
-    ;; Multiple scratch buffers
-    (add-to-list 'load-path "~/.emacs.d/external/multi-scratch/")
-
-    ;; Hare language mode
-    (add-to-list 'load-path "~/.emacs.d/external/hare-mode/")
-    ;; Odin language mode
-    (add-to-list 'load-path "~/.emacs.d/external/odin-mode/")
-
-
-    ;; Loading highlight-current-line
-    ;; Load autopair
-    (require 'autopair)
-
-    ;; Multiple scratch buffers
-    (require 'multi-scratch)
-
-    ;; Programming language support
-    (require 'hare-mode)
-    (require 'odin-mode))
-
-(when (file-directory-p (expand-file-name "external" user-emacs-directory))
-    (initialize-external))
-#+end_src
-
-* Setting up manually installed .el files
-** Ace jump
-#+begin_src elisp
-;; Autoload "Emacs quick move minor mode"
-(autoload 'ace-jump-mode "ace-jump-mode" t)
-;; you can select the key you prefer to
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
-#+end_src
-
-** Autopair
-#+begin_src elisp 
-(autopair-global-mode 1)
-#+end_src
-
 * Initializing package management
 ** Adds two repositories to be used and initializes required functions
 #+begin_src emacs-lisp
@@ -299,10 +252,13 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
 ;; Better linear undo/redo
 (use-package undo-fu)
 
+;; Make text navigating a lot easier
+(use-package ace-jump-mode)
+
 ;; Clean modeline
-(use-package doom-modeline
+(use-package mood-line
   :config
-  (doom-modeline-mode -1))
+  (mood-line-mode 1))
 
 ;; Languge Server Protocol (programming godsent)
 ;; I choose eglot over LSP because minimalism
@@ -325,6 +281,8 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
   :config
   (ivy-mode))
+
+;; Autocompletion stuff
 (use-package counsel)
 (use-package company
   :init
@@ -339,7 +297,7 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
 
 ;; Shows where cursor goes
 (use-package beacon
-  :init
+  :config
   (beacon-mode 1))
 
 ;; Efficient dashboard at startup
@@ -521,6 +479,12 @@ It's a standard present in almost every other text editor, and I just want them 
   "C--" 'text-scale-decrease)
 #+end_src
 
+Jump to a word by pressing a character with ace-jump-mode
+#+begin_src elisp
+(general-define-key
+ "C-c SPC" 'ace-jump-mode)
+#+end_src
+
 ** Evil mode stuffs
 *** page up/page down
 #+begin_src elisp 
@@ -667,27 +631,3 @@ Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it'
 #+begin_src elisp 
 "p" '(counsel-M-x :which-key "M-x"))
 #+end_src
-
-* Settings set by Customize
-#+begin_src elisp
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("171d1ae90e46978eb9c342be6658d937a83aaa45997b1d7af7657546cae5985b" "7661b762556018a44a29477b84757994d8386d6edee909409fabe0631952dad9" default))
- '(display-line-numbers-type 'visual)
- '(global-display-line-numbers-mode t)
- '(make-backup-files nil)
- '(package-selected-packages
-   '(evil-org company beacon elfeed doom-modeline evil-collection counsel general which-key ivy gruvbox-theme use-package))
- '(tool-bar-mode nil)
- '(uniquify-buffer-name-style nil nil (uniquify)))
-(custom-set-faces)
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- #+end_src
-p 
