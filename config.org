@@ -83,6 +83,11 @@ Height 143 is roughly 12-13px font size
 : t
 
 * General Emacs Behavior
+** No splash screen
+#+begin_src elisp
+;; No splash (startup) screen
+(setq inhibit-splash-screen t)
+#+end_src
 ** Clipboard more like Vim
 #+begin_src elisp 
 (setq x-select-enable-clipboard nil)
@@ -300,9 +305,11 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
 (use-package undo-fu)
 
 ;; Clean modeline
-(use-package doom-modeline
-  :config
-  (doom-modeline-mode -1))
+;; (use-package doom-modeline
+;;   :config
+;;   (doom-modeline-mode -1))
+(use-package mood-line
+     :config (mood-line-mode 1))
 
 ;; Languge Server Protocol (programming godsent)
 ;; I choose eglot over LSP because minimalism
@@ -325,6 +332,7 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
   :config
   (ivy-mode))
+
 (use-package counsel)
 (use-package company
   :init
@@ -343,9 +351,9 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (beacon-mode 1))
 
 ;; Efficient dashboard at startup
-(use-package dashboard
-  :config
-  (dashboard-setup-startup-hook))
+;; (use-package dashboard
+;;   :config
+;;   (dashboard-setup-startup-hook))
 
 ;; With one keybinding, spawn a temporary shell
 (use-package shell-pop
