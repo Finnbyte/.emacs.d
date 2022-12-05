@@ -291,6 +291,11 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
 
 ** Making emacs into a hardcore and efficient IDE
 #+begin_src emacs-lisp
+;; Dired tweaks
+(use-package dired
+  :custom
+  (dired-kill-when-opening-new-dired-buffer t))
+
 ;; Better linear undo/redo
 (use-package undo-fu)
 
@@ -446,7 +451,11 @@ Also, a ton of random shinanigans and everything else
 (use-package try)
 ;; Integration with Discord (because flexing Emacs is fun!)
 (use-package elcord
-  :config (elcord-mode))
+  :config
+  (elcord-mode)
+  :custom
+  (elcord--editor-name "I AM SUPERIOR TO YOU HAHAHA")
+  (elcord-idle-message "Doing something else than coding... lame."))
 #+end_src
 ** Programming languages
 *** Golang

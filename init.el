@@ -13,12 +13,12 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" "171d1ae90e46978eb9c342be6658d937a83aaa45997b1d7af7657546cae5985b" "7661b762556018a44a29477b84757994d8386d6edee909409fabe0631952dad9" default))
+   '("171d1ae90e46978eb9c342be6658d937a83aaa45997b1d7af7657546cae5985b" "7661b762556018a44a29477b84757994d8386d6edee909409fabe0631952dad9" default))
  '(display-line-numbers-type 'visual)
  '(global-display-line-numbers-mode t)
  '(make-backup-files nil)
  '(package-selected-packages
-   '(elcord tern js2-mode highlight-indent-guides all-the-icons magit evil-org company beacon elfeed doom-modeline evil-collection counsel general which-key ivy gruvbox-theme use-package))
+   '(dired evil-org company beacon elfeed doom-modeline evil-collection counsel general which-key ivy gruvbox-theme use-package))
  '(tool-bar-mode nil)
  '(uniquify-buffer-name-style nil nil (uniquify))
  '(warning-suppress-types '((use-package) (use-package) (use-package))))
