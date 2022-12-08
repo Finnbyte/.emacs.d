@@ -3,10 +3,12 @@
 #+PROPERTY: header-args :tangle config.el 
 
 *All of the headings grouped by functionality provided*
-| Introduction                                    | Introductes my point of view about Emacs                                       |
+| Introduction                                    | Introductes my point of view about Emacs and basics of this config             |
+|                                                 |                                                                                |
+| Stop bothering me custom                        |                                                                                |
 |                                                 |                                                                                |
 | Graphical User Interface                        | Vanilla Emacs GUI beautification                                               |
-| General Emacs Behavior                          | Disabling or enabling design choices in Vanilla Emacs                          |
+| General Emacs Behavior                          | Disabling or enabling design choices from Vanilla Emacs                     |
 |                                                 |                                                                                |
 | Functions used for variety of stuff             | Functions i've found or created which do useful things                         |
 |                                                 |                                                                                |
@@ -19,9 +21,6 @@
 | Keybindings                                     | Setting up keybindings, both evil and non-evil, for various functions          |
 |                                                 |                                                                                |
 | Configuring external programs                   | Configuring kind of the big not-text-editing related programs I have installed |
-|                                                 |                                                                                |
-| Settings set by Customize                       | Probably unimportant stuff you don't have to touch since I don't use customize |
-
 
 * Introduction
 
@@ -88,6 +87,12 @@ Height 143 is roughly 12-13px font size
 : t
 
 * General Emacs Behavior
+** Indentation/Tabbing
+#+begin_src elisp
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(setq indent-line-function 'insert-tab)
+#+end_src
 ** Clipboard more like Vim
 #+begin_src elisp 
 (setq x-select-enable-clipboard nil)
@@ -184,34 +189,30 @@ I don't think you should touch this, package downloading didn't work for me befo
     (set-window-buffer this other-buffer)))
 #+end_src
 
-* Initializing package management
-** Adds two repositories to be used and initializes required functions
-#+begin_src emacs-lisp
-(require 'package)
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
+* Straight.el variables
+#+begin_src elisp 
+#+end_sr
+* Straight.el initialization
+#+begin_src elisp
+  (defvar bootstrap-version) ;; Variable for straight.el version
+  (let ((bootstrap-file
+	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+	(bootstrap-version 6))
+    ;; If bootstrap file doesn't exist, download it synchronously from Github
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+	  (url-retrieve-synchronously
+	   "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+	   'silent 'inhibit-cookies)
+	(goto-char (point-max))
+	(eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+
+  ;; Install use-package so later packages can also be installed
+  (straight-use-package 'use-package)
+  (use-package straight
+      :custom (straight-use-package-by-default t))
 #+end_src
-
-#+RESULTS:
-
-** Setting up use-package macro
-First off, we want to make sure it's installed. If not, install it via vanilla Emacs package-install.
-Secondly, we want to require it so it can be used later on.
-Thirdly, we have to set a variable to be true, in order to enable global ensuration of installed packages.
-
-#+begin_src emacs-lisp
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure 't)
-#+end_src
-
-#+RESULTS:
-: t
-
 * Install and configure packages with use-package
 ** Evil
 #+begin_src elisp 
@@ -242,12 +243,32 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (general-evil-setup))
 #+end_src
 
+** Typescript-support
+#+begin_src elisp
+(use-package typescript-mode)
+(use-package flycheck)
+(use-package tide
+  :init
+  (defun setup-tide-mode ()
+    (interactive)
+    (tide-setup)
+    (flycheck-mode +1)
+    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (eldoc-mode +1)
+    (tide-hl-identifier-mode +1)
+    ;; company is an optional dependency. You have to
+    ;; install it separately via package-install
+    ;; `M-x package-install [ret] company`
+    (company-mode +1))
+  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+  )
+#+end_src
 ** Making emacs into a hardcore and efficient IDE
 #+begin_src emacs-lisp
 ;; Dired tweaks
-(use-package dired
-  :custom
-  (dired-kill-when-opening-new-dired-buffer t))
+;;(use-package dired
+;; :custom
+;; (dired-kill-when-opening-new-dired-buffer t))
 
 ;; Better linear undo/redo
 (use-package undo-fu)
@@ -316,8 +337,7 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (global-evil-surround-mode 1))
 
 ;; REPL for common lisp (((Going to test SLIME at some point too.)))
-(use-package sly
-  :pin melpa)
+(use-package sly)
 
 #+end_src	
 
@@ -335,32 +355,29 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (org-src-strip-leading-and-trailing-blank-lines t)
   (org-edit-src-content-indentation 0)
   :hook (after-save . automatic-babel-tangle))
-  :config
-  ;; org-babel languages
-  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
-                                                           (C . t)
-							       (shell . t)))
+:config
+;; org-babel languages
+(org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                         (C . t)
+                                                         (shell . t)))
 
 
-  ;; Unicode bullets instead of stars on headings
+;; Unicode bullets instead of stars on headings
 (use-package org-bullets
-    :config
-      (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-  ;; Evil keybindings for org stuffs
+;; Evil keybindings for org stuffs
 (use-package evil-org
-    :ensure t
-    :after org
-    :hook (org-mode . (lambda () evil-org-mode))
-    :config
-    (require 'evil-org-agenda)
-    (evil-org-agenda-set-keys))
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
 
 #+end_src	
 
 #+RESULTS:
-| (lambda nil evil-org-mode) | (lambda nil (org-bullets-mode 1)) | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] |
-
 ** External programs
 #+begin_src emacs-lisp
 
@@ -389,8 +406,7 @@ Thirdly, we have to set a variable to be true, in order to enable global ensurat
   (emms-minimalistic)
   (emms-default-players)
   :custom
-  (emms-info-asynchronously nil)
-  :pin melpa)
+  (emms-info-asynchronously nil))
 
 ;; Better terminal emulator than eshell
 ;; (use-package vterm
@@ -409,10 +425,11 @@ Also, a ton of random shinanigans and everything else
 (use-package try)
 ;; Integration with Discord (because flexing Emacs is fun!)
 (use-package elcord
+  :init
+  (setq elcord--editor-name "I AM SUPERIOR TO YOU HAHAHA")
   :config
   (elcord-mode)
   :custom
-  (elcord--editor-name "I AM SUPERIOR TO YOU HAHAHA")
   (elcord-idle-message "Doing something else than coding... lame."))
 #+end_src
 ** Programming languages
