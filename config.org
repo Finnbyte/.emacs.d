@@ -3,10 +3,12 @@
 #+PROPERTY: header-args :tangle config.el 
 
 *All of the headings grouped by functionality provided*
-| Introduction                                    | Introductes my point of view about Emacs                                       |
+| Introduction                                    | Introductes my point of view about Emacs and basics of this config             |
+|                                                 |                                                                                |
+| Stop bothering me custom                        |                                                                                |
 |                                                 |                                                                                |
 | Graphical User Interface                        | Vanilla Emacs GUI beautification                                               |
-| General Emacs Behavior                          | Disabling or enabling design choices in Vanilla Emacs                          |
+| General Emacs Behavior                          | Disabling or enabling design choices from Vanilla Emacs                     |
 |                                                 |                                                                                |
 | Functions used for variety of stuff             | Functions i've found or created which do useful things                         |
 |                                                 |                                                                                |
@@ -19,9 +21,6 @@
 | Keybindings                                     | Setting up keybindings, both evil and non-evil, for various functions          |
 |                                                 |                                                                                |
 | Configuring external programs                   | Configuring kind of the big not-text-editing related programs I have installed |
-|                                                 |                                                                                |
-| Settings set by Customize                       | Probably unimportant stuff you don't have to touch since I don't use customize |
-
 
 * Introduction
 
@@ -88,6 +87,12 @@ Height 143 is roughly 12-13px font size
 : t
 
 * General Emacs Behavior
+** Indentation/Tabbing
+#+begin_src elisp
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(setq indent-line-function 'insert-tab)
+#+end_src
 ** Clipboard more like Vim
 #+begin_src elisp 
 (setq x-select-enable-clipboard nil)
@@ -238,6 +243,26 @@ I don't think you should touch this, package downloading didn't work for me befo
   (general-evil-setup))
 #+end_src
 
+** Typescript-support
+#+begin_src elisp
+(use-package typescript-mode)
+(use-package flycheck)
+(use-package tide
+  :init
+  (defun setup-tide-mode ()
+    (interactive)
+    (tide-setup)
+    (flycheck-mode +1)
+    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (eldoc-mode +1)
+    (tide-hl-identifier-mode +1)
+    ;; company is an optional dependency. You have to
+    ;; install it separately via package-install
+    ;; `M-x package-install [ret] company`
+    (company-mode +1))
+  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+  )
+#+end_src
 ** Making emacs into a hardcore and efficient IDE
 #+begin_src emacs-lisp
 ;; Dired tweaks
@@ -318,37 +343,37 @@ I don't think you should touch this, package downloading didn't work for me befo
 
 ** Org-mode
 #+begin_src emacs-lisp
-  (use-package org
-    :custom
-    (org-startup-indented t)
-    (org-startup-folded t)
-    ;; Disable pesky confirm on elisp evaluation
-    (org-confirm-babel-evaluate nil)
-    ;; Source block indentation is wack by default
-    (org-src-preserve-indentation nil)
-    (org-src-tab-acts-natively t)
-    (org-src-strip-leading-and-trailing-blank-lines t)
-    (org-edit-src-content-indentation 0)
-    :hook (after-save . automatic-babel-tangle))
-    :config
-    ;; org-babel languages
-    (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
-							     (C . t)
-								 (shell . t)))
+(use-package org
+  :custom
+  (org-startup-indented t)
+  (org-startup-folded t)
+  ;; Disable pesky confirm on elisp evaluation
+  (org-confirm-babel-evaluate nil)
+  ;; Source block indentation is wack by default
+  (org-src-preserve-indentation nil)
+  (org-src-tab-acts-natively t)
+  (org-src-strip-leading-and-trailing-blank-lines t)
+  (org-edit-src-content-indentation 0)
+  :hook (after-save . automatic-babel-tangle))
+:config
+;; org-babel languages
+(org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                         (C . t)
+                                                         (shell . t)))
 
 
-    ;; Unicode bullets instead of stars on headings
-  (use-package org-bullets
-      :config
-	(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+;; Unicode bullets instead of stars on headings
+(use-package org-bullets
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-    ;; Evil keybindings for org stuffs
-  (use-package evil-org
-      :after org
-      :hook (org-mode . (lambda () evil-org-mode))
-      :config
-      (require 'evil-org-agenda)
-      (evil-org-agenda-set-keys))
+;; Evil keybindings for org stuffs
+(use-package evil-org
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
 
 #+end_src	
 
