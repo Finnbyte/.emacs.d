@@ -8,7 +8,7 @@
 | Stop bothering me custom                        |                                                                                |
 |                                                 |                                                                                |
 | Graphical User Interface                        | Vanilla Emacs GUI beautification                                               |
-| General Emacs Behavior                          | Disabling or enabling design choices from Vanilla Emacs                     |
+| General Emacs Behavior                          | Disabling or enabling design choices from Vanilla Emacs                        |
 |                                                 |                                                                                |
 | Functions used for variety of stuff             | Functions i've found or created which do useful things                         |
 |                                                 |                                                                                |
@@ -188,30 +188,20 @@ I don't think you should touch this, package downloading didn't work for me befo
     (set-window-buffer other this-buffer)
     (set-window-buffer this other-buffer)))
 #+end_src
-
-* Straight.el variables
+* Package.el setup
 #+begin_src elisp 
-#+end_sr
-* Straight.el initialization
-#+begin_src elisp
-  (defvar bootstrap-version) ;; Variable for straight.el version
-  (let ((bootstrap-file
-	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-	(bootstrap-version 6))
-    ;; If bootstrap file doesn't exist, download it synchronously from Github
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-	  (url-retrieve-synchronously
-	   "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-	   'silent 'inhibit-cookies)
-	(goto-char (point-max))
-	(eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
+(require 'package)
 
-  ;; Install use-package so later packages can also be installed
-  (straight-use-package 'use-package)
-  (use-package straight
-      :custom (straight-use-package-by-default t))
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure 't)
 #+end_src
 * Install and configure packages with use-package
 ** Evil
@@ -250,18 +240,16 @@ I don't think you should touch this, package downloading didn't work for me befo
 (use-package tide
   :init
   (defun setup-tide-mode ()
-    (interactive)
     (tide-setup)
-    (flycheck-mode +1)
+    (flycheck-mode 1)
     (setq flycheck-check-syntax-automatically '(save mode-enabled))
-    (eldoc-mode +1)
-    (tide-hl-identifier-mode +1)
+    (eldoc-mode 1)
+    (tide-hl-identifier-mode 1)
     ;; company is an optional dependency. You have to
     ;; install it separately via package-install
     ;; `M-x package-install [ret] company`
     (company-mode +1))
-  (add-hook 'typescript-mode-hook #'setup-tide-mode)
-  )
+  (add-hook 'typescript-mode-hook #'setup-tide-mode))
 #+end_src
 ** Making emacs into a hardcore and efficient IDE
 #+begin_src emacs-lisp
