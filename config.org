@@ -34,7 +34,96 @@ That's why I wanted to learn Emacs from scratch and get a firm understanding of 
 Next few categories control vanilla emacs things already built in.
 For example fonts or line numbers, which have extensive support in vanilla Emacs!
 
-* Stop bothering me custom
+* Package.el
+#+begin_src elisp 
+(require 'package)
+
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure 't)
+#+end_src
+* Evil
+#+begin_src elisp 
+(use-package evil
+  :demand t
+  :init
+  ;; These make evil-collection work :D
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  :custom
+  (evil-undo-system 'undo-fu)
+  :config
+  (evil-mode 1))
+#+end_src
+
+#+begin_src elisp 
+;; Evil keybindings for multitude of programs
+(use-package evil-collection
+  :after evil
+  ;; Enables vi-modes in minibuffers, not a fan myself.
+  ;; :custom (evil-collection-setup-minibuffer t)
+  :config
+  (evil-collection-init))
+#+end_src
+
+* Org-mode
+#+begin_src emacs-lisp
+(use-package org
+  :custom
+  (org-startup-indented t)
+  (org-startup-folded t)
+  ;; Disable pesky confirm on elisp evaluation
+  (org-confirm-babel-evaluate nil)
+  ;; Source block indentation is wack by default
+  (org-src-preserve-indentation nil)
+  (org-src-tab-acts-natively t)
+  (org-src-strip-leading-and-trailing-blank-lines t)
+  (org-edit-src-content-indentation 0)
+  :hook (after-save . automatic-babel-tangle))
+:config
+;; org-babel languages
+(org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                         (C . t)
+                                                         (shell . t)))
+
+
+;; Unicode bullets instead of stars on headings
+(use-package org-bullets
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+;; Evil keybindings for org stuffs
+(use-package evil-org
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
+#+end_src	
+
+#+RESULTS:
+* Emacs
+** Load a good theme
+All my homies hate white.
+#+begin_src elisp
+(use-package dracula-theme)
+(use-package gruvbox-theme)
+(use-package doom-themes
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italics t))
+
+(load-theme 'doom-ayu-dark t)
+#+end_src
+** Stop bothering me custom
 I really don't like custom. It's hard to read and it's just a mess in my opinion.
 That is why I am setting custom to not bother me right away.
 
@@ -43,7 +132,13 @@ This sets a place for custom settings but never loads it. To load it, you also n
 (setq custom-file (expand-file-name ".custom-settings.el" user-emacs-directory))
 #+end_src
 
-* Graphical User Interface
+** Startup screen begone!
+#+begin_src elisp
+(setq inhibit-startup-screen t) ;; No vanilla startup-screen
+(recentf-mode 1)
+(setq initial-buffer-choice #'recentf-open-files) ;; Open a list of recent worked files
+#+end_src
+** Graphical User Interface
 ** Truncate lines by default
 #+begin_src elisp 
 (setq truncate-lines t)
@@ -86,7 +181,7 @@ Height 143 is roughly 12-13px font size
 #+RESULTS:
 : t
 
-* General Emacs Behavior
+** General Emacs Behavior
 ** Indentation/Tabbing
 #+begin_src elisp
 (setq-default indent-tabs-mode nil)
@@ -137,19 +232,13 @@ Height 143 is roughly 12-13px font size
 (setq make-backup-files nil)
 #+end_src        
 
-** Melpa doesn't work without this, downgrades TLS connection
-I don't think you should touch this, package downloading didn't work for me before putting this in.
-#+begin_src emacs-lisp
-(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
-#+end_src       
-
-* Functions used for variety of stuff
+** Functions used for variety of stuff
 #+begin_src emacs-lisp
 ;; Functions
 (defun kill-other-buffers ()
   "kill all other buffers."
-   (interactive)
-   (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+  (interactive)
+  (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 
 (defun org-rid-of-results ()
   "Gets rid of results from org-babel-tangle."
@@ -158,16 +247,16 @@ I don't think you should touch this, package downloading didn't work for me befo
   (delete-matching-lines ".*#\+RESULTS:" nil nil t))
 
 (defun create-scratch-buffer nil
-       "create a scratch buffer"
-       (interactive)
-       (switch-to-buffer (get-buffer-create "*scratch*"))
-       (lisp-interaction-mode))   
+  "create a scratch buffer"
+  (interactive)
+  (switch-to-buffer (get-buffer-create "*scratch*"))
+  (lisp-interaction-mode))   
 
 (defun eval-config ()
   "Evaluate config.el, which hosts my configuration code"
   (interactive)
   (load-file (expand-file-name "config.el" user-emacs-directory)))
-  
+
 (defun get-file-extension-of-current-file ()
   "Gets file extension of arg"
   (substring (buffer-name) -3))
@@ -175,303 +264,53 @@ I don't think you should touch this, package downloading didn't work for me befo
 (defun automatic-babel-tangle ()
   "Automatically org-babel-tangles if document ends in .org"
   (if
-    (string= "org" (get-file-extension-of-current-file))
-    (org-babel-tangle)))
+      (string= "org" (get-file-extension-of-current-file))
+      (org-babel-tangle)))
 
 (defun swap-buffers-in-windows ()
   "Put the buffer from the selected window in next window, and vice versa"
   (interactive)
   (let* ((this (selected-window))
-     (other (next-window))
-     (this-buffer (window-buffer this))
-     (other-buffer (window-buffer other)))
+         (other (next-window))
+         (this-buffer (window-buffer this))
+         (other-buffer (window-buffer other)))
     (set-window-buffer other this-buffer)
     (set-window-buffer this other-buffer)))
 #+end_src
-* Package.el setup
-#+begin_src elisp 
-(require 'package)
-
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(package-initialize)
-
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure 't)
+* SSH
+#+begin_src elisp
 #+end_src
-* Install and configure packages with use-package
-** Evil
-#+begin_src elisp 
-(use-package evil
-  :init
-  ;; These make evil-collection work :D
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  :custom
-  (evil-undo-system 'undo-fu)
+* Try
+#+begin_src elisp
+(use-package try)
+#+end_src
+* Electric
+#+begin_src elisp
+(use-package electric
   :config
-  (evil-mode 1))
+  (electric-pair-mode 1))
 #+end_src
-** Evil-collection
-#+begin_src elisp 
-;; Evil keybindings for multitude of programs
-(use-package evil-collection
-  :after evil
-  ;; Enables vi-modes in minibuffers, not a fan myself.
-  ;; :custom (evil-collection-setup-minibuffer t)
-  :config
-  (evil-collection-init))
-#+end_src
-** General (keybinding manager)
+* General (keybinding manager)
 #+begin_src elisp 
 (use-package general
   :config
   (general-evil-setup))
 #+end_src
-
-** Typescript-support
-#+begin_src elisp
-(use-package typescript-mode)
-(use-package flycheck)
-(use-package tide
-  :init
-  (defun setup-tide-mode ()
-    (tide-setup)
-    (flycheck-mode 1)
-    (setq flycheck-check-syntax-automatically '(save mode-enabled))
-    (eldoc-mode 1)
-    (tide-hl-identifier-mode 1)
-    ;; company is an optional dependency. You have to
-    ;; install it separately via package-install
-    ;; `M-x package-install [ret] company`
-    (company-mode +1))
-  (add-hook 'typescript-mode-hook #'setup-tide-mode))
-#+end_src
-** Making emacs into a hardcore and efficient IDE
-#+begin_src emacs-lisp
-;; Dired tweaks
-;;(use-package dired
-;; :custom
-;; (dired-kill-when-opening-new-dired-buffer t))
-
-;; Better linear undo/redo
-(use-package undo-fu)
-
-;; Make text navigating a lot easier
-(use-package ace-jump-mode)
-
-;; Clean modeline
-(use-package mood-line
-  :config
-  (mood-line-mode 1))
-
-;; Languge Server Protocol (programming godsent)
-;; I choose eglot over LSP because minimalism
-(use-package eglot)
-
-;; Show indentations
-(use-package highlight-indent-guides
-   :custom
-   (highlight-indent-guides-method 'character) 
-   :config
-   (highlight-indent-guides-mode 1))
-
-;; Sorting M-x results
-(use-package flx)
-
-;; Ivy does it all.
-(use-package ivy
-  :custom
-  ;; Setting ivy to be fuzzy
-  (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
-  :config
-  (ivy-mode))
-
-;; Autocompletion stuff
-(use-package counsel)
-(use-package company
-  :init
-  (company-mode))
-
-;; Shows complete keybinds while typing
-(use-package which-key
-  :custom
-  (which-key-popup-type 'minibuffer)
-  :config
-  (which-key-mode))
-
-;; Shows where cursor goes
-(use-package beacon
-  :config
-  (beacon-mode 1))
-
-;; Efficient dashboard at startup
-(use-package dashboard
-  :config
-  (dashboard-setup-startup-hook))
-
-;; With one keybinding, spawn a temporary shell
-(use-package shell-pop
-  :custom
-  (shell-pop-term-shell "/bin/bash"))
-
-;; Vim Surround but in Emacs
-(use-package evil-surround 
-  :config
-  (global-evil-surround-mode 1))
-
-;; REPL for common lisp (((Going to test SLIME at some point too.)))
-(use-package sly)
-
-#+end_src	
-
-** Org-mode
-#+begin_src emacs-lisp
-(use-package org
-  :custom
-  (org-startup-indented t)
-  (org-startup-folded t)
-  ;; Disable pesky confirm on elisp evaluation
-  (org-confirm-babel-evaluate nil)
-  ;; Source block indentation is wack by default
-  (org-src-preserve-indentation nil)
-  (org-src-tab-acts-natively t)
-  (org-src-strip-leading-and-trailing-blank-lines t)
-  (org-edit-src-content-indentation 0)
-  :hook (after-save . automatic-babel-tangle))
-:config
-;; org-babel languages
-(org-babel-do-load-languages 'org-babel-load-languages '((python . t)
-                                                         (C . t)
-                                                         (shell . t)))
-
-
-;; Unicode bullets instead of stars on headings
-(use-package org-bullets
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-
-;; Evil keybindings for org stuffs
-(use-package evil-org
-  :after org
-  :hook (org-mode . (lambda () evil-org-mode))
-  :config
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
-
-#+end_src	
-
-#+RESULTS:
-** External programs
-#+begin_src emacs-lisp
-
-;; git client
-(use-package magit)
-
-;; News reader
-(use-package elfeed
-  :custom
-  ;; Cleaning up $HOME since automatically saves there
-  (elfeed-db-directory "~/.emacs.d/elfeed")
-  :config
-  ;; Set feeds to monitor
-  (setq elfeed-feeds
-      '("https://www.is.fi/rss/tuoreimmat.xml"
-        "https://reddit.com/r/linux.rss")))
-
-;; Getting forecasts in Emacs!
-(use-package wttrin
-  :config
-  (setq wttrin-default-cities '("Turku")))
-
-;; Media player
-(use-package emms
-  :config
-  (emms-minimalistic)
-  (emms-default-players)
-  :custom
-  (emms-info-asynchronously nil))
-
-;; Better terminal emulator than eshell
-;; (use-package vterm
-;;   :custom
-;;   ;; Use bash as default shell
-;;   (vterm-shell "/bin/bash")
-;;   :pin melpa)
-#+end_src
-
-** Misc
-This includes games or useful packages which can't be put into other categories.
-Also, a ton of random shinanigans and everything else 
-#+begin_src elisp 
-(use-package all-the-icons
-  :if (display-graphic-p))
-(use-package try)
-;; Integration with Discord (because flexing Emacs is fun!)
-(use-package elcord
-  :init
-  (setq elcord--editor-name "I AM SUPERIOR TO YOU HAHAHA")
-  :config
-  (elcord-mode)
-  :custom
-  (elcord-idle-message "Doing something else than coding... lame."))
-#+end_src
-** Programming languages
-*** Golang
-#+begin_src elisp 
-(use-package go-mode)
-#+end_src
-*** Lua
-#+begin_src elisp 
-(use-package lua-mode)
-#+end_src
-*** Js
-#+begin_src elisp
-(use-package js2-mode)
-(use-package tern)
-#+end_src
-** Themes
-#+begin_src emacs-lisp
-(use-package dracula-theme)
-(use-package gruvbox-theme)
-(use-package doom-themes
-        :config
-	(setq doom-themes-enable-bold t
-	      doom-themes-enable-italics t))
-
-(load-theme 'doom-one t)
-#+end_src
-
-** NOT USING - Ido testing xd - NOT USING
-Used to test with ido, but decided ivy is more for me.
-I'm going to keep my ido settings here though, for future!
-
-These will not be tangled and therefore will never reach my actual config.el file.
-#+begin_src elisp :tangle no
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
-(ido-mode 1)
-#+end_src
-
 * Keybindings
 ** Keybindings not related to evil 
 With these, my fingers don't have to leave hjkl row on keyboard!
 #+begin_src elisp
 (general-define-key
-  :keymaps 'ivy-minibuffer-map
-  "C-j" 'ivy-next-line
-  "C-k" 'ivy-previous-line
-  "C-l" "RET")
+ :keymaps 'ivy-minibuffer-map
+ "C-j" 'ivy-next-line
+ "C-k" 'ivy-previous-line
+ "C-l" "RET")
 
 (general-define-key
-  :keymaps '(ido-common-completion-map ido-file-dir-completion-map)
-  "C-j" 'ido-next-match
-  "C-k" 'ido-prev-match)
-  
+ :keymaps '(ido-common-completion-map ido-file-dir-completion-map)
+ "C-j" 'ido-next-match
+ "C-k" 'ido-prev-match)
+
 #+end_src
 
 #+RESULTS:
@@ -480,8 +319,8 @@ Make text larger with Ctrl + "+" and smaller with Ctrl + "-"
 It's a standard present in almost every other text editor, and I just want them so bad in Emacs!
 #+begin_src elisp 
 (general-define-key
-  "C-+" 'text-scale-increase
-  "C--" 'text-scale-decrease)
+ "C-+" 'text-scale-increase
+ "C--" 'text-scale-decrease)
 #+end_src
 
 Jump to a word by pressing a character with ace-jump-mode
@@ -506,11 +345,11 @@ undo-tree was pretty garbage and undo-redo didn't work expectly.
 Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it's ok to do this
 #+begin_src elisp 
 (general-define-key
-  :keymaps '(evil-normal-state-map)
-  "C-h" 'evil-window-left
-  "C-l" 'evil-window-right
-  "C-k" 'evil-window-up
-  "C-j" 'evil-window-down)
+ :keymaps '(evil-normal-state-map)
+ "C-h" 'evil-window-left
+ "C-l" 'evil-window-right
+ "C-k" 'evil-window-up
+ "C-j" 'evil-window-down)
 #+end_src
 
 *** Toggle evil mode on and off
@@ -547,19 +386,19 @@ Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it'
 *** Define categories
 #+begin_src elisp
 (general-define-key
-:states '(normal visual)
-:keymaps 'override
-:prefix "SPC"
-;; Categories
-"h" '(help-command :which-key "Help")
-"b" '(:ignore t :which-key "Buffers")
-"b" '(:ignore t :which-key "Buffers")
-"g" '(:ignore t :which-key "Games")
-"a" '(:ignore t :which-key "Apps")
-"s" '(:ignore t :which-key "Shell")
-"f" '(:ignore t :which-key "Files")
-"e" '(:ignore t :which-key "Emacs/Elisp")
-"o" '(:ignore t :which-key "Org")
+ :states '(normal visual)
+ :keymaps 'override
+ :prefix "SPC"
+ ;; Categories
+ "h" '(help-command :which-key "Help")
+ "b" '(:ignore t :which-key "Buffers")
+ "b" '(:ignore t :which-key "Buffers")
+ "g" '(:ignore t :which-key "Games")
+ "a" '(:ignore t :which-key "Apps")
+ "s" '(:ignore t :which-key "Shell")
+ "f" '(:ignore t :which-key "Files")
+ "e" '(:ignore t :which-key "Emacs/Elisp")
+ "o" '(:ignore t :which-key "Org")
 #+end_src
 
 *** Define sub-categories
@@ -636,3 +475,199 @@ Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it'
 #+begin_src elisp 
 "p" '(counsel-M-x :which-key "M-x"))
 #+end_src
+
+* Making emacs into a hardcore and efficient IDE
+#+begin_src emacs-lisp
+;; Dired tweaks
+;;(use-package dired
+;; :custom
+;; (dired-kill-when-opening-new-dired-buffer t))
+
+(use-package tree-sitter
+  :config
+  (global-tree-sitter-mode)
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+(use-package tree-sitter-langs)
+
+;; Fuzzy finding files
+(use-package projectile
+  :config
+  (projectile-mode 1)
+  :custom
+  (projectile-completion-system 'ivy))
+
+;; Better linear undo/redo
+(use-package undo-fu)
+
+;; Make text navigating a lot easier
+(use-package ace-jump-mode)
+
+;; Clean modeline
+(use-package mood-line
+  :config
+  (mood-line-mode 1))
+
+;; Languge Server Protocol (programming godsent)
+(use-package lsp-mode
+  :config
+  (lsp-headerline-breadcrumb-mode -1)
+  :hook (prog-mode . #'lsp-deferred))
+(use-package lsp-ui
+  :custom
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-sideline-show-diagnostics t))
+
+
+;; Show indentations
+(use-package highlight-indent-guides
+  :custom
+  (highlight-indent-guides-method 'character) 
+  :config
+  (highlight-indent-guides-mode 1))
+
+;; Sorting M-x results
+(use-package flx)
+
+;; Ivy does it all.
+(use-package ivy
+  :custom
+  ;; Setting ivy to be fuzzy
+  (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  :config
+  (ivy-mode))
+
+;; Autocompletion stuff
+(use-package counsel)
+(use-package company
+  :init
+  (company-mode))
+
+;; Shows complete keybinds while typing
+(use-package which-key
+  :custom
+  (which-key-popup-type 'minibuffer)
+  :config
+  (which-key-mode))
+
+;; Efficient dashboard at startup
+;;(use-package dashboard
+;;  :custom
+;;  (dashboard-heading-icons '((recents . nil)
+;;        (bookmarks . nil)
+;;        (agenda . nil)
+;;        (projects . nil)
+;;        (registers . nil)))
+;;  (dashboard-footer-icon '())
+;;  :config
+;;  (dashboard-setup-startup-hook))
+
+;; With one keybinding, spawn a temporary shell
+(use-package shell-pop
+  :custom
+  (shell-pop-term-shell "/bin/bash"))
+
+;; Vim Surround but in Emacs
+(use-package evil-surround 
+  :config
+  (global-evil-surround-mode 1))
+
+;; REPL for common lisp (((Going to test SLIME at some point too.)))
+(use-package sly)
+#+end_src	
+
+* External programs
+#+begin_src emacs-lisp
+
+;; git client
+(use-package magit)
+
+;; News reader
+(use-package elfeed
+  :custom
+  ;; Cleaning up $HOME since automatically saves there
+  (elfeed-db-directory "~/.emacs.d/elfeed")
+  :config
+  ;; Set feeds to monitor
+  (setq elfeed-feeds
+        '("https://www.is.fi/rss/tuoreimmat.xml"
+          "https://reddit.com/r/linux.rss")))
+
+;; Getting forecasts in Emacs!
+(use-package wttrin
+  :config
+  (setq wttrin-default-cities '("Turku")))
+
+;; Media player
+(use-package emms
+  :config
+  (emms-minimalistic)
+  (emms-default-players)
+  :custom
+  (emms-info-asynchronously nil))
+
+;; Better terminal emulator than eshell
+;; (use-package vterm
+;;   :custom
+;;   ;; Use bash as default shell
+;;   (vterm-shell "/bin/bash")
+;;   :pin melpa)
+#+end_src
+
+* Misc
+This includes games or useful packages which can't be put into other categories.
+Also, a ton of random shinanigans and everything else 
+#+begin_src elisp 
+(use-package all-the-icons
+  :if (display-graphic-p))
+;; Integration with Discord (because flexing Emacs is fun!)
+(use-package elcord
+  :init
+  (setq elcord--editor-name "I AM SUPERIOR TO YOU HAHAHA")
+  :config
+  (elcord-mode)
+  :custom
+  (elcord-idle-message "Doing something else than coding... lame."))
+#+end_src
+* Programming languages
+*** Typescript
+#+begin_src elisp
+(use-package typescript-mode)
+(use-package flycheck)
+(use-package tide
+  :init
+  (defun setup-tide-mode ()
+    (tide-setup)
+    (flycheck-mode 1)
+    (setq flycheck-check-syntax-automatically '(save idle-change new-line mode-enabled))
+    (eldoc-mode 1)
+    (tide-hl-identifier-mode 1)
+    ;; company is an optional dependency. You have to
+    ;; install it separately via package-install
+    ;; `M-x package-install [ret] company`
+    (company-mode +1))
+  (add-hook 'typescript-mode-hook #'setup-tide-mode))
+#+end_src
+*** Golang
+#+begin_src elisp 
+(use-package go-mode)
+#+end_src
+*** Lua
+#+begin_src elisp 
+(use-package lua-mode)
+#+end_src
+*** Js
+#+begin_src elisp
+(use-package js2-mode)
+(use-package tern)
+#+end_src
+* NOT USING - Ido testing xd - NOT USING
+Used to test with ido, but decided ivy is more for me.
+I'm going to keep my ido settings here though, for future!
+
+These will not be tangled and therefore will never reach my actual config.el file.
+#+begin_src elisp :tangle no
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
+#+end_src
+
