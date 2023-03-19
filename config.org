@@ -1,6 +1,6 @@
 #+TITLE: Finnbyte's Emacs config
 #+AUTHOR: Finnbyte
-#+PROPERTY: header-args :tangle config.el 
+#+PROPERTY: header-args :tangle config.el
 
 *All of the headings grouped by functionality provided*
 | Introduction                                    | Introductes my point of view about Emacs and basics of this config             |
@@ -22,26 +22,26 @@
 |                                                 |                                                                                |
 | Configuring external programs                   | Configuring kind of the big not-text-editing related programs I have installed |
 
-* Introduction
-
-Welcome to my poggers configuration file for emacs!
+Welcome to my configuration file for emacs!
 I want a minimal and really vi-style emacs. I love emacs for
 it's extensibility and the feeling of having everything "close by".
 
 I totally agree on people saying "Do not use Emacs distributions, Emacs is designed to be modified by *you*"
 That's why I wanted to learn Emacs from scratch and get a firm understanding of it :D
 
-Next few categories control vanilla emacs things already built in.
-For example fonts or line numbers, which have extensive support in vanilla Emacs!
 
-* Package.el
+Next few categories are really important for me to initiate at first. Having these on helps debugging a lot and are arguably all I need to edit productively.
+
+* Package archives 
 #+begin_src elisp 
 (require 'package)
 
 (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
-
+#+end_src
+* use-package
+#+begin_src elisp
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -49,6 +49,10 @@ For example fonts or line numbers, which have extensive support in vanilla Emacs
 (require 'use-package)
 (setq use-package-always-ensure 't)
 #+end_src
+
+#+RESULTS:
+: t
+
 * Evil
 #+begin_src elisp 
 (use-package evil
@@ -63,6 +67,9 @@ For example fonts or line numbers, which have extensive support in vanilla Emacs
   (evil-mode 1))
 #+end_src
 
+#+RESULTS:
+: t
+
 #+begin_src elisp 
 ;; Evil keybindings for multitude of programs
 (use-package evil-collection
@@ -71,10 +78,18 @@ For example fonts or line numbers, which have extensive support in vanilla Emacs
   ;; :custom (evil-collection-setup-minibuffer t)
   :config
   (evil-collection-init))
+
+;; Vim Surround but in Emacs
+(use-package evil-surround 
+  :config
+  (global-evil-surround-mode 1))
 #+end_src
 
+#+RESULTS:
+: t
+
 * Org-mode
-#+begin_src emacs-lisp
+#+begin_src elisp 
 (use-package org
   :custom
   (org-startup-indented t)
@@ -82,17 +97,15 @@ For example fonts or line numbers, which have extensive support in vanilla Emacs
   ;; Disable pesky confirm on elisp evaluation
   (org-confirm-babel-evaluate nil)
   ;; Source block indentation is wack by default
-  (org-src-preserve-indentation nil)
-  (org-src-tab-acts-natively t)
-  (org-src-strip-leading-and-trailing-blank-lines t)
+  ;; (org-src-preserve-indentation nil)
+  ;; (org-src-tab-acts-natively t)
+  ;; (org-src-strip-leading-and-trailing-blank-lines t)
   (org-edit-src-content-indentation 0)
-  :hook (after-save . automatic-babel-tangle))
 :config
 ;; org-babel languages
 (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
                                                          (C . t)
-                                                         (shell . t)))
-
+                                                         (shell . t))))
 
 ;; Unicode bullets instead of stars on headings
 (use-package org-bullets
@@ -107,10 +120,10 @@ For example fonts or line numbers, which have extensive support in vanilla Emacs
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
 
-#+end_src	
+#+end_src
 
-#+RESULTS:
 * Emacs
+These control basic emacs vanilla settings.
 ** Load a good theme
 All my homies hate white.
 #+begin_src elisp
@@ -121,8 +134,12 @@ All my homies hate white.
   (setq doom-themes-enable-bold t
         doom-themes-enable-italics t))
 
-(load-theme 'doom-ayu-dark t)
+(load-theme 'doom-one t)
 #+end_src
+
+#+RESULTS:
+: t
+
 ** Stop bothering me custom
 I really don't like custom. It's hard to read and it's just a mess in my opinion.
 That is why I am setting custom to not bother me right away.
@@ -132,36 +149,51 @@ This sets a place for custom settings but never loads it. To load it, you also n
 (setq custom-file (expand-file-name ".custom-settings.el" user-emacs-directory))
 #+end_src
 
+#+RESULTS:
+: c:/Users/bytz/AppData/Roaming/.emacs.d/.custom-settings.el
+
 ** Startup screen begone!
 #+begin_src elisp
 (setq inhibit-startup-screen t) ;; No vanilla startup-screen
 (recentf-mode 1)
 (setq initial-buffer-choice #'recentf-open-files) ;; Open a list of recent worked files
 #+end_src
-** Graphical User Interface
+
+#+RESULTS:
+: recentf-open-files
+
 ** Truncate lines by default
 #+begin_src elisp 
 (setq truncate-lines t)
 #+end_src
+
+#+RESULTS:
+: t
+
 ** Setting a clear to see font
 Height 143 is roughly 12-13px font size
 
-#+begin_src emacs-lisp
-;; Consolas is what VSCode uses for example. Very modern and clean.
+#+begin_src elisp
 (set-face-attribute 'default nil
-                    :family "Consolas"
-                    :height 143
+                    :family "JetBrains Mono"
+                    :height 124 
                     :weight 'normal
                     :width 'normal)
 #+end_src
 
+#+RESULTS:
+
 ** Enabling hybrid line numbers
-#+begin_src emacs-lisp
+#+begin_src elisp
 (setq display-line-numbers-type 'visual)
 (global-display-line-numbers-mode t)
 #+end_src
+
+#+RESULTS:
+: t
+
 ** Variety of graphical beautifying
-#+begin_src emacs-lisp
+#+begin_src elisp
 ;; Disabling unimportant GUI stuff
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
@@ -181,13 +213,16 @@ Height 143 is roughly 12-13px font size
 #+RESULTS:
 : t
 
-** General Emacs Behavior
 ** Indentation/Tabbing
 #+begin_src elisp
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 (setq indent-line-function 'insert-tab)
 #+end_src
+
+#+RESULTS:
+: insert-tab
+
 ** Clipboard more like Vim
 #+begin_src elisp 
 (setq x-select-enable-clipboard nil)
@@ -201,11 +236,17 @@ Height 143 is roughly 12-13px font size
 (setq auto-save-default nil)
 #+end_src
 
+#+RESULTS:
+
 ** Give focus to help windows
 #+begin_src elisp 
 ;; Always gives focus to help windows
 (setq help-window-select t)
 #+end_src
+
+#+RESULTS:
+: t
+
 ** Only pop up warning buffer if Emacs had errors
 #+begin_src elisp
 (setq warning-minimum-level :error)
@@ -219,6 +260,9 @@ Height 143 is roughly 12-13px font size
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
+#+RESULTS:
+: yes-or-no-p
+
 ** Makes apropos useful and to search extensively
 #+begin_src elisp
 (setq apropos-do-all t)
@@ -228,12 +272,14 @@ Height 143 is roughly 12-13px font size
 : t
 
 ** Disables gibberish backup files
-#+begin_src emacs-lisp
+#+begin_src elisp
 (setq make-backup-files nil)
 #+end_src        
 
+#+RESULTS:
+
 ** Functions used for variety of stuff
-#+begin_src emacs-lisp
+#+begin_src elisp
 ;; Functions
 (defun kill-other-buffers ()
   "kill all other buffers."
@@ -248,6 +294,7 @@ Height 143 is roughly 12-13px font size
 
 (defun create-scratch-buffer nil
   "create a scratch buffer"
+  ;; xdd
   (interactive)
   (switch-to-buffer (get-buffer-create "*scratch*"))
   (lisp-interaction-mode))   
@@ -262,10 +309,10 @@ Height 143 is roughly 12-13px font size
   (substring (buffer-name) -3))
 
 (defun automatic-babel-tangle ()
-  "Automatically org-babel-tangles if document ends in .org"
-  (if
-      (string= "org" (get-file-extension-of-current-file))
-      (org-babel-tangle)))
+;; Automatically org-babel-tangles if document ends in .org"
+   (if
+       (string= "org" (get-file-extension-of-current-file))
+       (org-babel-tangle)))
 
 (defun swap-buffers-in-windows ()
   "Put the buffer from the selected window in next window, and vice versa"
@@ -277,25 +324,34 @@ Height 143 is roughly 12-13px font size
     (set-window-buffer other this-buffer)
     (set-window-buffer this other-buffer)))
 #+end_src
-* SSH
-#+begin_src elisp
-#+end_src
+
 * Try
 #+begin_src elisp
 (use-package try)
 #+end_src
+
+#+RESULTS:
+
 * Electric
 #+begin_src elisp
 (use-package electric
   :config
   (electric-pair-mode 1))
 #+end_src
-* General (keybinding manager)
+
+#+RESULTS:
+: t
+
+* General
 #+begin_src elisp 
 (use-package general
   :config
   (general-evil-setup))
 #+end_src
+
+#+RESULTS:
+: t
+
 * Keybindings
 ** Keybindings not related to evil 
 With these, my fingers don't have to leave hjkl row on keyboard!
@@ -323,11 +379,15 @@ It's a standard present in almost every other text editor, and I just want them 
  "C--" 'text-scale-decrease)
 #+end_src
 
+#+RESULTS:
+
 Jump to a word by pressing a character with ace-jump-mode
 #+begin_src elisp
 (general-define-key
  "C-c SPC" 'ace-jump-mode)
 #+end_src
+
+#+RESULTS:
 
 ** Evil mode stuffs
 *** page up/page down
@@ -335,6 +395,9 @@ Jump to a word by pressing a character with ace-jump-mode
 (evil-define-key 'normal 'global (kbd "C-d") 'evil-scroll-down)
 (evil-define-key 'normal 'global (kbd "C-S-d") 'evil-scroll-up)
 #+end_src
+
+#+RESULTS:
+
 *** undo-fu redo instead of evil's
 undo-tree was pretty garbage and undo-redo didn't work expectly.
 #+begin_src elisp
@@ -476,18 +539,56 @@ Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it'
 "p" '(counsel-M-x :which-key "M-x"))
 #+end_src
 
-* Making emacs into a hardcore and efficient IDE
-#+begin_src emacs-lisp
-;; Dired tweaks
-;;(use-package dired
-;; :custom
-;; (dired-kill-when-opening-new-dired-buffer t))
-
+* Treesitter
+ #+begin_src elisp
 (use-package tree-sitter
   :config
   (global-tree-sitter-mode)
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
 (use-package tree-sitter-langs)
+ #+end_src
+* Modeline
+This mode-line is really clean and modern, which is why I like it.
+#+begin_src elisp
+(use-package mood-line
+  :config
+  (mood-line-mode 1))
+#+end_src
+* Undo
+#+begin_src elisp
+(use-package undo-fu)
+#+end_src
+* LSP
+#+begin_src elisp
+(use-package lsp-mode
+  :config
+  (lsp-headerline-breadcrumb-mode -1)
+  :hook (prog-mode . #'lsp-deferred))
+(use-package lsp-ui
+  :custom
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-sideline-show-diagnostics t))
+#+end_src
+* Dashboard (disabled)
+I don't want a dashboard right now. Easy to enable when I want it back on.
+#+begin_src elisp :tangle no
+(use-package dashboard
+  :custom
+  (dashboard-heading-icons '((recents . nil)
+        (bookmarks . nil)
+        (agenda . nil)
+        (projects . nil)
+        (registers . nil)))
+  (dashboard-footer-icon '())
+  :config
+  (dashboard-setup-startup-hook))
+#+end_src
+* Making emacs into a hardcore and efficient IDE
+#+begin_src elisp
+;; Dired tweaks
+;;(use-package dired
+;; :custom
+;; (dired-kill-when-opening-new-dired-buffer t))
 
 ;; Fuzzy finding files
 (use-package projectile
@@ -497,26 +598,9 @@ Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it'
   (projectile-completion-system 'ivy))
 
 ;; Better linear undo/redo
-(use-package undo-fu)
 
 ;; Make text navigating a lot easier
 (use-package ace-jump-mode)
-
-;; Clean modeline
-(use-package mood-line
-  :config
-  (mood-line-mode 1))
-
-;; Languge Server Protocol (programming godsent)
-(use-package lsp-mode
-  :config
-  (lsp-headerline-breadcrumb-mode -1)
-  :hook (prog-mode . #'lsp-deferred))
-(use-package lsp-ui
-  :custom
-  (lsp-ui-sideline-show-hover t)
-  (lsp-ui-sideline-show-diagnostics t))
-
 
 ;; Show indentations
 (use-package highlight-indent-guides
@@ -549,34 +633,18 @@ Normally Ctrl-H would be help menu, but since that's already bound to <spc>H it'
   :config
   (which-key-mode))
 
-;; Efficient dashboard at startup
-;;(use-package dashboard
-;;  :custom
-;;  (dashboard-heading-icons '((recents . nil)
-;;        (bookmarks . nil)
-;;        (agenda . nil)
-;;        (projects . nil)
-;;        (registers . nil)))
-;;  (dashboard-footer-icon '())
-;;  :config
-;;  (dashboard-setup-startup-hook))
-
 ;; With one keybinding, spawn a temporary shell
 (use-package shell-pop
   :custom
   (shell-pop-term-shell "/bin/bash"))
 
-;; Vim Surround but in Emacs
-(use-package evil-surround 
-  :config
-  (global-evil-surround-mode 1))
 
 ;; REPL for common lisp (((Going to test SLIME at some point too.)))
 (use-package sly)
 #+end_src	
 
 * External programs
-#+begin_src emacs-lisp
+#+begin_src elisp
 
 ;; git client
 (use-package magit)
@@ -660,7 +728,7 @@ Also, a ton of random shinanigans and everything else
 (use-package js2-mode)
 (use-package tern)
 #+end_src
-* NOT USING - Ido testing xd - NOT USING
+* Ido (disabled) 
 Used to test with ido, but decided ivy is more for me.
 I'm going to keep my ido settings here though, for future!
 
@@ -670,4 +738,3 @@ These will not be tangled and therefore will never reach my actual config.el fil
 (setq ido-everywhere t)
 (ido-mode 1)
 #+end_src
-
