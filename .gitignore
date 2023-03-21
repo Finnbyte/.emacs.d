@@ -2,6 +2,7 @@
 *
 
 # Except for these:
+!config.el
 !.gitignore
 !config.org
 !init.el
