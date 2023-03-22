@@ -334,6 +334,7 @@
   :custom
   ;; Setting ivy to be fuzzy
   (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  (ivy-on-del-error-function 'ignore)
   :config
   (ivy-mode))
 
