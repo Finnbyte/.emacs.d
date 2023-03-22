@@ -151,15 +151,14 @@
                                                          (shell . t))))
 ;; Unicode bullets instead of stars on headings
 (use-package org-bullets
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  :hook (org-mode . (lambda () (org-bullets-mode 1))))
 
 (use-package dracula-theme)
 (use-package gruvbox-theme)
 (use-package doom-themes
-  :config
-  (setq-default doom-themes-enable-bold t
-        doom-themes-enable-italics t))
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-enable-italics t))
 
 (load-theme 'doom-tokyo-night t)
 
