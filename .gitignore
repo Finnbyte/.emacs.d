@@ -2,6 +2,7 @@
 *
 
 # Except for these:
+!lisp
 !lisp/**
 !.gitignore
 !init.el
