@@ -1,3 +1,13 @@
+;;; init.el --- Emacs config
+
+;; Author: Finnbyte <https://github.com/finnbyte>
+;; Maintainer: Finnbyte <https://github.com/finnbyte>
+
+;;; Commentary:
+;; Finnbyte's init.el
+
+;;; Code:
+
 ;; Don't use outdated bytecode
 (setq load-prefer-newer t)
 
@@ -389,7 +399,8 @@
 
 (use-package typescript-mode)
 
-(use-package flycheck)
+(use-package flycheck
+  :hook (after-init . global-flycheck-mode))
 
 (use-package go-mode)
 
@@ -397,3 +408,6 @@
 
 (use-package js2-mode)
 
+
+(provide 'init)
+;;; init.el ends here
