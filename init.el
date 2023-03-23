@@ -293,9 +293,9 @@
 (use-package undo-fu)
 
 (use-package lsp-mode
-  :config
-  (lsp-headerline-breadcrumb-mode -1)
-  :hook (prog-mode . #'lsp-deferred))
+  :hook (prog-mode . (lambda ()
+		       (setq lsp-headerline-breadcrumb-enable nil)
+		       (lsp-deferred))))
 (use-package lsp-ui
   :custom
   (lsp-ui-sideline-show-hover t)
