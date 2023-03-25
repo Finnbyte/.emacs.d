@@ -1,5 +1,5 @@
-;; Functions
-(defun move-text-internal (arg)
+;;; Functions
+(defun me/move-text-internal (arg)
   (cond
    ((and mark-active transient-mark-mode)
     (if (> (point) (mark))
@@ -27,64 +27,81 @@
         (forward-line -1))
       (move-to-column column t)))))
 
-(defun move-text-down (arg)
-  "Move region (transient-mark-mode active) or current line
-  arg lines down."
+(defun me/move-text-down (arg)
+  "Move region (transient-mark-mode active) or current line arg lines down."
   (interactive "*p")
   (move-text-internal arg))
 
-(defun move-text-up (arg)
-  "Move region (transient-mark-mode active) or current line
-  arg lines up."
+(defun me/move-text-up (arg)
+  "Move region (transient-mark-mode active) or current line arg lines up."
   (interactive "*p")
   (move-text-internal (- arg)))
 
-(defun get-shell ()
+(defun me/get-shell ()
   "Returns a shell as string depending on OS"
   (unless (string-equal system-type "windows-nt")
     ;; Return bash unless on Windows
     "/bin/bash")
   "powershell")
 
-(defun kill-other-buffers ()
+(defun me/save-persistent-scratch ()
+  "Write the contents of *scratch* to the file name
+`persistent-scratch-file-name'."
+  (with-current-buffer (get-buffer-create "*scratch*")
+    (write-region (point-min) (point-max) (expand-file-name ".persistent-scratch" user-emacs-directory))))
+
+(defun me/load-persistent-scratch ()
+  "Load the contents of `persistent-scratch-file-name' into the
+  scratch buffer, clearing its contents first."
+  (if (file-exists-p "~/.emacs-persistent-scratch")
+      (with-current-buffer (get-buffer "*scratch*")
+        (delete-region (point-min) (point-max))
+        (insert-file-contents (expand-file-name ".persistent-scratch" user-emacs-directory)))))
+
+(defun me/kill-other-buffers ()
   "kill all other buffers."
   (interactive)
   (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
 
-(defun window-half-height ()
+(defun me/window-half-height ()
   (max 1 (/ (1- (window-height (selected-window))) 2)))
 
-(defun scroll-down-half ()
+(defun me/scroll-down-half ()
   (interactive)
   (scroll-up (window-half-height)))
 
-(defun scroll-up-half ()         
+(defun me/scroll-up-half ()         
   (interactive)                    
   (scroll-down (window-half-height)))
 
-(defun create-scratch-buffer nil
+(defun me/create-scratch-buffer nil
   "create a scratch buffer"
   ;; xdd
   (interactive)
   (switch-to-buffer (get-buffer-create "*scratch*"))
   (lisp-interaction-mode))   
 
-(defun eval-config ()
+(defun me/eval-config ()
   "Evaluate config.el, which hosts my configuration code"
   (interactive)
   (load-file (expand-file-name "config.el" user-emacs-directory)))
 
-(defun get-file-extension-of-current-file ()
-  "Gets file extension of arg"
-  (substring (buffer-name) -3))
+(defun me/get-filetype (filename)
+  "Gets filetype of filename string"
+  (if (stringp filename)
+      (last (split-string filename "[\.]" t))
+  (error (format "Invalid string: '%s'" filename))))
 
-(defun automatic-babel-tangle ()
+(defun me/current-filename ()
+    "Get name of current file being edited"
+    (buffer-name))
+
+(defun me/automatic-babel-tangle ()
 ;; Automatically org-babel-tangles if document ends in .org"
-   (if
-       (string= "org" (get-file-extension-of-current-file))
+   (if (string= "org" (get-filetype (current-filename)))
        (org-babel-tangle)))
 
-(defun swap-buffers-in-windows ()
+(defun me/swap-buffers-in-windows ()
   "Put the buffer from the selected window in next window, and vice versa"
   (interactive)
   (let* ((this (selected-window))

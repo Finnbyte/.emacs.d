@@ -4,7 +4,9 @@
 ;; Maintainer: Finnbyte <https://github.com/finnbyte>
 
 ;;; Commentary:
-;; Finnbyte's init.el
+
+;; Finnbyte's init.el aka Emacs dotfiles.
+;; This one file sets everything up, even though there is naturally other elisp files.
 
 ;;; Code:
 
@@ -31,12 +33,19 @@
 ;; Load everything on "lisp"-directory
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
+;; Preserve scratch buffer
+(push #'load-persistent-scratch after-init-hook)
+(push #'save-persistent-scratch kill-emacs-hook)
+
+(if (not (boundp 'save-persistent-scratch-timer))
+    (setq save-persistent-scratch-timer
+          (run-with-idle-timer 300 t 'save-persistent-scratch)))
+
 ;; important, enable async byte compiling
 (use-package async
   :config (async-bytecomp-package-mode 1))
 
 ;; use-packages macros..
-
 (use-package meow
   :config
 (defun meow-setup ()
@@ -169,6 +178,7 @@
 (recentf-mode 1)
 (setq initial-buffer-choice #'recentf-open-files) ;; Open a list of recent worked files
 
+;; Wrap long lines
 (setq truncate-lines t)
 
 ;; Setting font
@@ -188,7 +198,7 @@
 (set-fringe-mode 10)
 
 ;; Always show new lines below cursor
-;; (setq scroll-margin 7)
+(setq scroll-margin 7)
 
 ;; Hightlight entire line cursor is on
 (global-hl-line-mode)
@@ -216,7 +226,6 @@
 (use-package wrap-region
   :config (wrap-region-mode))
 
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; (general-define-key
 ;;  :states '(normal visual)
@@ -299,7 +308,17 @@
 (use-package lsp-ui
   :custom
   (lsp-ui-sideline-show-hover t)
-  (lsp-ui-sideline-show-diagnostics t))
+  (lsp-ui-sideline-show-diagnostics t)
+  :hook (prog-mode . (lambda () (interactive) lsp-ui-mode)))
+
+
+(use-package yasnippet
+  :after (yasnippet-snippets)
+  :config
+  (yas-reload-all)
+  (add-hook 'prog-mode-hook #'yas-minor-mode))
+		  
+(use-package yasnippet-snippets)
 
 ;; Dired tweaks
 ;;(use-package dired
@@ -332,10 +351,13 @@
 ;; Ivy does it all.
 (use-package ivy
   :custom
-  ;; Setting ivy to be fuzzy
-  (ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  ;; When line empty and backspace is pressed, don't leave minibuffer
   (ivy-on-del-error-function 'ignore)
   :config
+  ;; This didn't work above for some reason
+  (setq ivy-re-builders-alist
+      '((swiper . ivy--regex-fuzzy)
+        (t      . ivy--regex-fuzzy)))
   (ivy-mode))
 
 ;; Autocompletion stuff
