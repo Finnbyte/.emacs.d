@@ -30,12 +30,12 @@
 (defun me/move-text-down (arg)
   "Move region (transient-mark-mode active) or current line arg lines down."
   (interactive "*p")
-  (move-text-internal arg))
+  (me/move-text-internal arg))
 
 (defun me/move-text-up (arg)
   "Move region (transient-mark-mode active) or current line arg lines up."
   (interactive "*p")
-  (move-text-internal (- arg)))
+  (me/move-text-internal (- arg)))
 
 (defun me/get-shell ()
   "Returns a shell as string depending on OS"
@@ -53,10 +53,10 @@
 (defun me/load-persistent-scratch ()
   "Load the contents of `persistent-scratch-file-name' into the
   scratch buffer, clearing its contents first."
-  (if (file-exists-p "~/.emacs-persistent-scratch")
+  (if (file-exists-p (expand-file-name ".persistent-scratch" user-emacs-directory)
       (with-current-buffer (get-buffer "*scratch*")
         (delete-region (point-min) (point-max))
-        (insert-file-contents (expand-file-name ".persistent-scratch" user-emacs-directory)))))
+        (insert-file-contents (expand-file-name ".persistent-scratch" user-emacs-directory))))))
 
 (defun me/kill-other-buffers ()
   "kill all other buffers."

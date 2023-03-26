@@ -30,16 +30,17 @@
 (require 'use-package)
 (setq use-package-always-ensure 't)
 
-;; Load everything on "lisp"-directory
-(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+;; Load everything on "lisp"-directory (doesn't work so temporary solution...)
+;; (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+(load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
 
 ;; Preserve scratch buffer
-(push #'load-persistent-scratch after-init-hook)
-(push #'save-persistent-scratch kill-emacs-hook)
+(add-hook 'after-init-hook 'me/load-persistent-scratch)
+(add-hook 'kill-emacs-hook 'me/save-persistent-scratch)
 
-(if (not (boundp 'save-persistent-scratch-timer))
+(if (not (boundp 'save-persistent-scratch-timer)) ;; Start a timer loop which saves every 2 min
     (setq save-persistent-scratch-timer
-          (run-with-idle-timer 300 t 'save-persistent-scratch)))
+          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
 
 ;; important, enable async byte compiling
 (use-package async
@@ -70,8 +71,8 @@
    '("8" . meow-digit-argument)
    '("9" . meow-digit-argument)
    '("0" . meow-digit-argument)
-   '("d" . scroll-down-half)
-   '("u" . scroll-up-half)
+   '("d" . me/scroll-down-half)
+   '("u" . me/scroll-up-half)
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet)
    '("." . ido-find-file))
@@ -141,6 +142,9 @@
    '("<escape>" . ignore)))
 (meow-setup)
 (meow-global-mode 1))
+
+;; Keybinds
+(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
 
 (use-package org
   :custom
@@ -321,9 +325,9 @@
 (use-package yasnippet-snippets)
 
 ;; Dired tweaks
-;;(use-package dired
-;; :custom
-;; (dired-kill-when-opening-new-dired-buffer t))
+(use-package dired
+ :custom
+ (dired-kill-when-opening-new-dired-buffer t))
 
 ;; Fuzzy finding files
 (use-package projectile
@@ -331,8 +335,6 @@
   (projectile-mode 1)
   :custom
   (projectile-completion-system 'ivy))
-
-;; Better linear undo/redo
 
 ;; Make text navigating a lot easier
 (use-package ace-jump-mode
@@ -343,10 +345,7 @@
   :custom
   (highlight-indent-guides-method 'character)
   :config
-  (highlight-indent-guides-mode 1))
-
-;; Sorting M-x results
-(use-package flx)
+  (highlight-indent-guides-mode))
 
 ;; Ivy does it all.
 (use-package ivy
@@ -378,11 +377,19 @@
   :config
   (which-key-mode))
 
+;; Live markdown/org preview
+(use-package grip-mode
+  :init
+  ;; Run pip install if grip python package not found
+  (lambda()
+    (if (not (string-match "grip" (shell-command-to-string "pip list --disable-pip-version-check")))
+	(start-process "grip-install" nil "pip" "install" "grip")))
+  :hook (markdown-mode . grip-mode))
+
 ;; With one keybinding, spawn a temporary shell
 (use-package shell-pop
   :custom
-  (shell-pop-term-shell "powershell"))
-
+  (shell-pop-term-shell (me/get-shell)))
 
 ;; REPL for common lisp (((Going to test SLIME at some point too.)))
 (use-package sly)
@@ -406,9 +413,6 @@
 (use-package wttrin
   :config
   (setq wttrin-default-cities '("Turku")))
-
-(use-package all-the-icons
-  :if (display-graphic-p))
 
 ;; Integration with Discord (because flexing Emacs is fun!)
 (use-package elcord
