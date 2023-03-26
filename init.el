@@ -13,6 +13,10 @@
 ;; Don't use outdated bytecode
 (setq load-prefer-newer t)
 
+;; Performance/startup time increase?
+;; Most popular Emacs distributions use this so hopefully it's good
+(setq gc-cons-threshold 100000000)
+
 ;; Required for package installing etc.
 (require 'package)
 
@@ -35,18 +39,19 @@
 (load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
 
 ;; Preserve scratch buffer
-(add-hook 'after-init-hook 'me/load-persistent-scratch)
-(add-hook 'kill-emacs-hook 'me/save-persistent-scratch)
+(me/load-persistent-scratch)
+(push #'me/save-persistent-scratch kill-emacs-hook)
 
-(if (not (boundp 'save-persistent-scratch-timer)) ;; Start a timer loop which saves every 2 min
-    (setq save-persistent-scratch-timer
-          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
+;; Start a timer loop which saves scratch buffer every 2 min
+(if (not (boundp 'save-persistent-scratch-timer)) 
+   (setq save-persistent-scratch-timer
+     (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
 
 ;; important, enable async byte compiling
 (use-package async
   :config (async-bytecomp-package-mode 1))
 
-;; use-packages macros..
+;; Meow makes my Emacs wonderfully modal!
 (use-package meow
   :config
 (defun meow-setup ()
@@ -71,8 +76,6 @@
    '("8" . meow-digit-argument)
    '("9" . meow-digit-argument)
    '("0" . meow-digit-argument)
-   '("d" . me/scroll-down-half)
-   '("u" . me/scroll-up-half)
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet)
    '("." . ido-find-file))
@@ -145,6 +148,7 @@
 
 ;; Keybinds
 (global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
+(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
 
 (use-package org
   :custom
@@ -178,15 +182,17 @@
 ;; Throw everything custom does to another file
 (setq custom-file (expand-file-name ".custom-settings.el" user-emacs-directory))
 
-(setq inhibit-startup-screen t) ;; No vanilla startup-screen
+;; No vanilla startup-screen
+(setq inhibit-startup-screen t)
+
+;; Saves recent files in cache
 (recentf-mode 1)
-(setq initial-buffer-choice #'recentf-open-files) ;; Open a list of recent worked files
 
 ;; Wrap long lines
 (setq truncate-lines t)
 
 ;; Setting font
-(set-frame-font "JetBrains Mono 12")
+(set-frame-font "JetBrains Mono 13")
 
 ;; Line numbers
 (setq-default display-line-numbers-type 'visual)
@@ -202,7 +208,7 @@
 (set-fringe-mode 10)
 
 ;; Always show new lines below cursor
-(setq scroll-margin 7)
+;; (setq scroll-margin 7)
 
 ;; Hightlight entire line cursor is on
 (global-hl-line-mode)
@@ -211,10 +217,11 @@
 (setq make-backup-files nil)
 (setq auto-save-default nil)
 
+;; Don't make new buffers on entering directories
+(setq dired-kill-when-opening-new-dired-buffer t)
+
 ;; Always gives focus to help windows
 (setq help-window-select t)
-
-(setq warning-minimum-level :error)
 
 ;; Answer with y/n to yes/no prompts
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -306,9 +313,9 @@
 (use-package undo-fu)
 
 (use-package lsp-mode
-  :hook (prog-mode . (lambda ()
-		       (setq lsp-headerline-breadcrumb-enable nil)
-		       (lsp-deferred))))
+  :config
+  (setq lsp-headerline-breadcrumb-enable nil))
+  
 (use-package lsp-ui
   :custom
   (lsp-ui-sideline-show-hover t)
@@ -323,11 +330,6 @@
   (add-hook 'prog-mode-hook #'yas-minor-mode))
 		  
 (use-package yasnippet-snippets)
-
-;; Dired tweaks
-(use-package dired
- :custom
- (dired-kill-when-opening-new-dired-buffer t))
 
 ;; Fuzzy finding files
 (use-package projectile
@@ -352,6 +354,7 @@
   :custom
   ;; When line empty and backspace is pressed, don't leave minibuffer
   (ivy-on-del-error-function 'ignore)
+  :bind (("C-s" . swiper))
   :config
   ;; This didn't work above for some reason
   (setq ivy-re-builders-alist
@@ -359,13 +362,16 @@
         (t      . ivy--regex-fuzzy)))
   (ivy-mode))
 
+
 ;; Autocompletion stuff
 (use-package counsel)
 (use-package company
   :custom
   (company-minimum-prefix-length 1)
+  (company-backends '((company-capf :with company-yasnippet)))
   :hook (after-init . global-company-mode)
-  :config (company-mode 1))
+  :config
+  (company-mode 1))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -391,12 +397,14 @@
   :custom
   (shell-pop-term-shell (me/get-shell)))
 
-;; REPL for common lisp (((Going to test SLIME at some point too.)))
+;; REPL for CL (Common Lisp)
 (use-package sly)
 
 ;; git client
 (use-package magit
-  :pin melpa)
+  :pin melpa
+  :bind (("C-x g" . magit-status)
+         ("C-x C-g" . magit-status)))
 
 ;; News reader
 (use-package elfeed
@@ -423,15 +431,12 @@
   :custom
   (elcord-idle-message "Doing something else than coding... lame."))
 
+;; Programming modes
 (use-package typescript-mode)
-
 (use-package flycheck
   :hook (after-init . global-flycheck-mode))
-
 (use-package go-mode)
-
 (use-package lua-mode)
-
 (use-package js2-mode)
 
 

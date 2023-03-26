@@ -53,10 +53,10 @@
 (defun me/load-persistent-scratch ()
   "Load the contents of `persistent-scratch-file-name' into the
   scratch buffer, clearing its contents first."
-  (if (file-exists-p (expand-file-name ".persistent-scratch" user-emacs-directory)
+  (if (file-exists-p (expand-file-name ".persistent-scratch" user-emacs-directory))
       (with-current-buffer (get-buffer "*scratch*")
         (delete-region (point-min) (point-max))
-        (insert-file-contents (expand-file-name ".persistent-scratch" user-emacs-directory))))))
+        (insert-file-contents (expand-file-name ".persistent-scratch" user-emacs-directory)))))
 
 (defun me/kill-other-buffers ()
   "kill all other buffers."
@@ -68,11 +68,11 @@
 
 (defun me/scroll-down-half ()
   (interactive)
-  (scroll-up (window-half-height)))
+  (scroll-up (me/window-half-height)))
 
 (defun me/scroll-up-half ()         
   (interactive)                    
-  (scroll-down (window-half-height)))
+  (scroll-down (me/window-half-height)))
 
 (defun me/create-scratch-buffer nil
   "create a scratch buffer"
@@ -98,7 +98,7 @@
 
 (defun me/automatic-babel-tangle ()
 ;; Automatically org-babel-tangles if document ends in .org"
-   (if (string= "org" (get-filetype (current-filename)))
+   (if (string= "org" (me/get-filetype (me/current-filename)))
        (org-babel-tangle)))
 
 (defun me/swap-buffers-in-windows ()
