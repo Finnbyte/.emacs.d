@@ -78,7 +78,8 @@
    '("0" . meow-digit-argument)
    '("/" . meow-keypad-describe-key)
    '("?" . meow-cheatsheet)
-   '("." . ido-find-file))
+   '("." . ido-find-file)
+   '("<SPC>" . counsel-ibuffer))
   (meow-normal-define-key
    '("M-k" . move-text-up)
    '("M-j" . move-text-down)
