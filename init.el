@@ -21,8 +21,8 @@
 (require 'package)
 
 ;; Repositories
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
 
 ;; Install use-package if it isn't installed
@@ -231,6 +231,12 @@
 
 (use-package try)
 
+(use-package savehist
+  :custom
+  (savehist-additional-variables '(compile-command))
+  :config
+  (savehist-mode 1))
+
 (use-package electric
   :config
   (electric-pair-mode 1))
@@ -357,6 +363,7 @@
   (ivy-on-del-error-function 'ignore)
   :bind (("C-s" . swiper))
   :config
+  (use-package flx) ;; Great sorting algoritm
   ;; This didn't work above for some reason
   (setq ivy-re-builders-alist
       '((swiper . ivy--regex-fuzzy)
@@ -399,7 +406,10 @@
   (shell-pop-term-shell (me/get-shell)))
 
 ;; REPL for CL (Common Lisp)
-(use-package sly)
+(use-package sly
+  :custom
+  (sly-complete-symbol-function 'sly-simple-completions)
+  :bind (:map sly-mrepl-mode-map ("M-h" . sly-documentation-lookup)))
 
 ;; git client
 (use-package magit
@@ -425,8 +435,6 @@
 
 ;; Integration with Discord (because flexing Emacs is fun!)
 (use-package elcord
-  :init
-  (setq elcord--editor-name "I AM SUPERIOR TO YOU HAHAHA")
   :config
   (elcord-mode)
   :custom
