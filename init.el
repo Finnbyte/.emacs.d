@@ -409,7 +409,7 @@
 (use-package sly
   :custom
   (sly-complete-symbol-function 'sly-simple-completions)
-  :bind (:map sly-mrepl-mode-map ("M-h" . sly-documentation-lookup)))
+  :bind (:map sly-mode-map ("M-h" . sly-documentation-lookup)))
 
 ;; git client
 (use-package magit
