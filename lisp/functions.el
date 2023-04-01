@@ -44,6 +44,14 @@
     "/bin/bash")
   "powershell")
 
+(defun me/try-execute-cmd (CMD-STR-UNPARSED)
+  ;; Return nil if command resulted in error
+  ;; Meant to be used for checking if binary is found
+  (let (cmd (split-string CMD-STR-UNPARSED " " t))
+      (condition-case nil
+      (start-process "" nil (car cmd) "-v") ;
+    (error nil))))
+
 (defun me/save-persistent-scratch ()
   "Write the contents of *scratch* to the file name
 `persistent-scratch-file-name'."
