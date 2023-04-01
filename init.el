@@ -10,6 +10,9 @@
 
 ;;; Code:
 
+;; Variables
+(setq home-user-name "bytz") ;; Some packages should only load when I am at home
+
 ;; Don't use outdated bytecode
 (setq load-prefer-newer t)
 
@@ -44,112 +47,119 @@
 
 ;; Start a timer loop which saves scratch buffer every 2 min
 (if (not (boundp 'save-persistent-scratch-timer)) 
-   (setq save-persistent-scratch-timer
-     (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
+    (setq save-persistent-scratch-timer
+          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
 
-;; important, enable async byte compiling
-(use-package async
-  :config (async-bytecomp-package-mode 1))
+;; indentation
+(setq-default indent-tabs-mode nil
+              tab-stop-list ()
+              tab-width  4)
+(use-package dtrt-indent
+  :config (dtrt-indent-global-mode 1))
 
 ;; Meow makes my Emacs wonderfully modal!
 (use-package meow
   :config
-(defun meow-setup ()
-  "Set cheatsheet layout."
-  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-  (meow-motion-overwrite-define-key
-   '("j" . meow-next)
-   '("k" . meow-prev)
-   '("<escape>" . ignore))
-  (meow-leader-define-key
-   ;; SPC j/k will run the original command in MOTION state.
-   '("j" . "H-j")
-   '("k" . "H-k")
-   ;; Use SPC (0-9) for digit arguments.
-   '("1" . meow-digit-argument)
-   '("2" . meow-digit-argument)
-   '("3" . meow-digit-argument)
-   '("4" . meow-digit-argument)
-   '("5" . meow-digit-argument)
-   '("6" . meow-digit-argument)
-   '("7" . meow-digit-argument)
-   '("8" . meow-digit-argument)
-   '("9" . meow-digit-argument)
-   '("0" . meow-digit-argument)
-   '("/" . meow-keypad-describe-key)
-   '("?" . meow-cheatsheet)
-   '("." . ido-find-file)
-   '("<SPC>" . counsel-ibuffer))
-  (meow-normal-define-key
-   '("M-k" . move-text-up)
-   '("M-j" . move-text-down)
-   '("0" . meow-expand-0)
-   '("9" . meow-expand-9)
-   '("8" . meow-expand-8)
-   '("7" . meow-expand-7)
-   '("6" . meow-expand-6)
-   '("5" . meow-expand-5)
-   '("4" . meow-expand-4)
-   '("3" . meow-expand-3)
-   '("2" . meow-expand-2)
-   '("1" . meow-expand-1)
-   '("-" . negative-argument)
-   '(";" . meow-reverse)
-   '("," . meow-inner-of-thing)
-   '("." . meow-bounds-of-thing)
-   '("[" . meow-beginning-of-thing)
-   '("]" . meow-end-of-thing)
-   '("a" . meow-append)
-   '("A" . meow-open-below)
-   '("b" . meow-back-word)
-   '("B" . meow-back-symbol)
-   '("c" . meow-change)
-   '("d" . meow-delete)
-   '("D" . meow-backward-delete)
-   '("e" . meow-next-word)
-   '("E" . meow-next-symbol)
-   '("f" . meow-find)
-   '("g" . meow-cancel-selection)
-   '("G" . meow-grab)
-   '("h" . meow-left)
-   '("H" . meow-left-expand)
-   '("i" . meow-insert)
-   '("I" . meow-open-above)
-   '("j" . meow-next)
-   '("J" . meow-next-expand)
-   '("k" . meow-prev)
-   '("K" . meow-prev-expand)
-   '("l" . meow-right)
-   '("L" . meow-right-expand)
-   '("m" . meow-join)
-   '("n" . meow-search)
-   '("o" . meow-block)
-   '("O" . meow-to-block)
-   '("p" . meow-yank)
-   '("q" . meow-quit)
-   '("Q" . meow-goto-line)
-   '("r" . meow-replace)
-   '("R" . meow-swap-grab)
-   '("s" . meow-kill)
-   '("t" . meow-till)
-   '("u" . meow-undo)
-   '("U" . meow-undo-in-selection)
-   '("v" . meow-visit)
-   '("w" . meow-mark-word)
-   '("W" . meow-mark-symbol)
-   '("x" . meow-line)
-   '("X" . meow-goto-line)
-   '("y" . meow-save)
-   '("Y" . meow-sync-grab)
-   '("z" . meow-pop-selection)
-   '("'" . repeat)
-   '("<escape>" . ignore)))
-(meow-setup)
-(meow-global-mode 1))
+  (defun meow-setup ()
+    "Set cheatsheet layout."
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+    (meow-motion-overwrite-define-key
+     '("j" . meow-next)
+     '("k" . meow-prev)
+     '("<escape>" . ignore))
+    (meow-leader-define-key
+     ;; SPC j/k will run the original command in MOTION state.
+     '("j" . "H-j")
+     '("k" . "H-k")
+     ;; Use SPC (0-9) for digit arguments.
+     '("1" . meow-digit-argument)
+     '("2" . meow-digit-argument)
+     '("3" . meow-digit-argument)
+     '("4" . meow-digit-argument)
+     '("5" . meow-digit-argument)
+     '("6" . meow-digit-argument)
+     '("7" . meow-digit-argument)
+     '("8" . meow-digit-argument)
+     '("9" . meow-digit-argument)
+     '("0" . meow-digit-argument)
+     '("/" . meow-keypad-describe-key)
+     '("?" . meow-cheatsheet)
+     '("." . ido-find-file)
+     '("<SPC>" . counsel-ibuffer))
+    (meow-normal-define-key
+     '("M-k" . move-text-up)
+     '("M-j" . move-text-down)
+     '("0" . meow-expand-0)
+     '("9" . meow-expand-9)
+     '("8" . meow-expand-8)
+     '("7" . meow-expand-7)
+     '("6" . meow-expand-6)
+     '("5" . meow-expand-5)
+     '("4" . meow-expand-4)
+     '("3" . meow-expand-3)
+     '("2" . meow-expand-2)
+     '("1" . meow-expand-1)
+     '("-" . negative-argument)
+     '(";" . meow-reverse)
+     '("," . meow-inner-of-thing)
+     '("." . meow-bounds-of-thing)
+     '("[" . meow-beginning-of-thing)
+     '("]" . meow-end-of-thing)
+     '("a" . meow-append)
+     '("A" . meow-open-below)
+     '("b" . meow-back-word)
+     '("B" . meow-back-symbol)
+     '("c" . meow-change)
+     '("d" . meow-delete)
+     '("D" . meow-backward-delete)
+     '("e" . meow-next-word)
+     '("E" . meow-next-symbol)
+     '("f" . meow-find)
+     '("g" . meow-cancel-selection)
+     '("G" . meow-grab)
+     '("h" . meow-left)
+     '("H" . meow-left-expand)
+     '("i" . meow-insert)
+     '("I" . meow-open-above)
+     '("j" . meow-next)
+     '("J" . meow-next-expand)
+     '("k" . meow-prev)
+     '("K" . meow-prev-expand)
+     '("l" . meow-right)
+     '("L" . meow-right-expand)
+     '("m" . meow-join)
+     '("n" . meow-search)
+     '("o" . meow-block)
+     '("O" . meow-to-block)
+     '("p" . meow-yank)
+     '("q" . meow-quit)
+     '("Q" . meow-goto-line)
+     '("r" . meow-replace)
+     '("R" . meow-swap-grab)
+     '("s" . meow-kill)
+     '("t" . meow-till)
+     '("u" . undo-tree-undo)
+     '("v" . meow-visit)
+     '("w" . meow-mark-word)
+     '("W" . meow-mark-symbol)
+     '("x" . meow-line)
+     '("X" . meow-goto-line)
+     '("y" . meow-save)
+     '("Y" . meow-sync-grab)
+     '("z" . meow-pop-selection)
+     '("'" . repeat)
+     '("<escape>" . ignore)))
+  (meow-setup)
+  (meow-global-mode 1))
 
 ;; Keybinds
 (global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
 (global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
+
+;; undo
+(use-package undo-tree
+  :bind ("C-r" . undo-tree-redo)
+  :config (global-undo-tree-mode))
 
 (use-package org
   :custom
@@ -162,23 +172,19 @@
   ;; (org-src-tab-acts-natively t)
   ;; (org-src-strip-leading-and-trailing-blank-lines t)
   (org-edit-src-content-indentation 0)
-:config
-;; org-babel languages
-(org-babel-do-load-languages 'org-babel-load-languages '((python . t)
-                                                         (C . t)
-                                                         (shell . t))))
-;; Unicode bullets instead of stars on headings
-(use-package org-bullets
-  :hook (org-mode . (lambda () (org-bullets-mode 1))))
+  :config
+  ;; org-babel languages
+  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                           (C . t)
+                                                           (shell . t))))
 
-(use-package dracula-theme)
 (use-package gruvbox-theme)
 (use-package doom-themes
   :custom
   (doom-themes-enable-bold t)
   (doom-themes-enable-italics t))
 
-(load-theme 'doom-tokyo-night t)
+(load-theme 'gruvbox-dark-soft t)
 
 ;; Throw everything custom does to another file
 (setq custom-file (expand-file-name ".custom-settings.el" user-emacs-directory))
@@ -243,7 +249,6 @@
 
 (use-package wrap-region
   :config (wrap-region-mode))
-
 
 ;; (general-define-key
 ;;  :states '(normal visual)
@@ -322,7 +327,7 @@
 (use-package lsp-mode
   :config
   (setq lsp-headerline-breadcrumb-enable nil))
-  
+
 (use-package lsp-ui
   :custom
   (lsp-ui-sideline-show-hover t)
@@ -335,7 +340,7 @@
   :config
   (yas-reload-all)
   (add-hook 'prog-mode-hook #'yas-minor-mode))
-		  
+
 (use-package yasnippet-snippets)
 
 ;; Fuzzy finding files
@@ -349,13 +354,6 @@
 (use-package ace-jump-mode
   :bind ("C-c SPC" . ace-jump-mode))
 
-;; Show indentations
-(use-package highlight-indent-guides
-  :custom
-  (highlight-indent-guides-method 'character)
-  :config
-  (highlight-indent-guides-mode))
-
 ;; Ivy does it all.
 (use-package ivy
   :custom
@@ -364,18 +362,27 @@
   :bind (("C-s" . swiper))
   :config
   (use-package flx) ;; Great sorting algoritm
-  ;; This didn't work above for some reason
+  ;; This didn't work on :custom for some reason
   (setq ivy-re-builders-alist
-      '((swiper . ivy--regex-fuzzy)
-        (t      . ivy--regex-fuzzy)))
+        '((swiper . ivy--regex-fuzzy)
+          (t      . ivy--regex-fuzzy)))
   (ivy-mode))
 
+;; Better help
+(use-package helpful
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h k" . helpful-key)
+         ("C-h x" . helpful-command)))
 
 ;; Autocompletion stuff
 (use-package counsel)
 (use-package company
   :custom
   (company-minimum-prefix-length 1)
+  ;; aligns annotation to the right hand side
+  (setq company-tooltip-align-annotations t)
+  ;; Company integration with yasnippet
   (company-backends '((company-capf :with company-yasnippet)))
   :hook (after-init . global-company-mode)
   :config
@@ -397,16 +404,12 @@
   ;; Run pip install if grip python package not found
   (lambda()
     (if (not (string-match "grip" (shell-command-to-string "pip list --disable-pip-version-check")))
-	(start-process "grip-install" nil "pip" "install" "grip")))
+	    (start-process "grip-install" nil "pip" "install" "grip")))
   :hook (markdown-mode . grip-mode))
-
-;; With one keybinding, spawn a temporary shell
-(use-package shell-pop
-  :custom
-  (shell-pop-term-shell (me/get-shell)))
 
 ;; REPL for CL (Common Lisp)
 (use-package sly
+  :if (executable-find "sbcl")
   :custom
   (sly-complete-symbol-function 'sly-simple-completions)
   :bind (:map sly-mode-map ("M-h" . sly-documentation-lookup)))
@@ -419,6 +422,7 @@
 
 ;; News reader
 (use-package elfeed
+  :if (string= home-user-name (user-login-name))
   :custom
   ;; Cleaning up $HOME since automatically saves there
   (elfeed-db-directory "~/.emacs.d/elfeed")
@@ -428,26 +432,35 @@
         '("https://www.is.fi/rss/tuoreimmat.xml"
           "https://reddit.com/r/linux.rss")))
 
-;; Getting forecasts in Emacs!
-(use-package wttrin
-  :config
-  (setq wttrin-default-cities '("Turku")))
-
 ;; Integration with Discord (because flexing Emacs is fun!)
 (use-package elcord
+  :if (string= home-user-name (user-login-name))
   :config
   (elcord-mode)
   :custom
   (elcord-idle-message "Doing something else than coding... lame."))
 
 ;; Programming modes
-(use-package typescript-mode)
+
+;; Typescript
+(use-package typescript-mode
+  :if (executable-find "ts-node"))
+(use-package tide
+  :if (executable-find "ts-node")
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         (before-save . tide-format-before-save)))
+
 (use-package flycheck
   :hook (after-init . global-flycheck-mode))
-(use-package go-mode)
-(use-package lua-mode)
-(use-package js2-mode)
 
+(use-package go-mode
+  :if (executable-find "go"))
+(use-package lua-mode
+  :if (executable-find "lua"))
+(use-package js2-mode
+  :if (executable-find "node"))
 
 (provide 'init)
 ;;; init.el ends here
