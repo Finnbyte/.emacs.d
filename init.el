@@ -250,68 +250,6 @@
 (use-package wrap-region
   :config (wrap-region-mode))
 
-;; (general-define-key
-;;  :states '(normal visual)
-;;  :keymaps 'override
-;;  :prefix "SPC"
-;;  ;; Categories
-;;  "h" '(help-command :which-key "Help")
-;;  "b" '(:ignore t :which-key "Buffers")
-;;  "b" '(:ignore t :which-key "Buffers")
-;;  "g" '(:ignore t :which-key "Games")
-;;  "a" '(:ignore t :which-key "Apps")
-;;  "s" '(:ignore t :which-key "Shell")
-;;  "f" '(:ignore t :which-key "Files")
-;;  "e" '(:ignore t :which-key "Emacs/Elisp")
-;;  "o" '(:ignore t :which-key "Org")
-;;
-;; ;; sub-categories
-;; "a m" '(:ignore t :which-key "Math")
-;; "o s" '(:ignore t :which-key "src")
-;;
-;; "b s" '(counsel-switch-buffer :which-key "Switch buffers")
-;; "b b" '(ibuffer :which-key "Show buffer list")
-;;
-;; "b k" '(kill-this-buffer :which-key "Kill current buffer")
-;;
-;; "b n" '(switch-to-next-buffer :which-key "Switch to next buffer")
-;; "b p" '(switch-to-prev-buffer :which-key "Switch to previous buffer")
-;;
-;; ;; Alternative command for switching (scrolling through) buffers quickly
-;; ">" '(switch-to-next-buffer :which-key t)
-;; "<" '(switch-to-prev-buffer :which-key t)
-;;
-;; "a m c" '(calculator :which-key "Simple calculator")
-;; "a m m" '(calc :which-key "Advanced calculator")
-;;
-;; "g s" '(steam-launch :which-key "Launch a game on Steam")
-;;
-;; "s p" '(shell-pop :which-key "Pop up a shell")
-;; "s v" '(vterm :which-key "vterm")
-;; "!" '(shell-command :which-key "Shell command")
-;; "\"" '(async-shell-command :which-key "Asynchronous shell command")
-;;
-;; "." '(ido-find-file :which-key "Find file")
-;; "/" '(ido-dired :which-key "Find directory")
-;; "f r" '(counsel-recentf :which-key "Recent files")
-;; "f b" '(bookmark-jump :which-key "Browse bookmarks")
-;; "f s" '(save-buffer :which-key "Save current buffer")
-;;
-;; ;; Alternative command for bookmarks
-;; "DEL" '(bookmark-jump :which-key "Browse bookmarks")
-;;
-;; "RET" '(eval-defun :which-key "Evaluate expression")
-;; "e b" '(eval-buffer :which-key "Evaluate entire buffer")
-;; "e r" '(eval-region :which-key "Evaluate an region specified with visual-mode")
-;; "e l" '(eval-expression :which-key "Evaluate an elisp expression")
-;; "e e" '(eval-config :which-key "Reload config.el")
-;;
-;; "o i" '(org-insert-structure-template :which-key "Insert org structure template")
-;; "o e" '(org-export-dispatch :which-key "Exports org-document to other fileformat")
-;; "o s e" '(org-edit-src-code :which-key "Edit src-code block")
-;;
-;; "p" '(counsel-M-x :which-key "M-x"))
-
 (use-package tree-sitter
   :config
   (global-tree-sitter-mode)
