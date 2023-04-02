@@ -8,14 +8,17 @@ Some inspiration from these is probably seen around this config!
 (setq home-user-name "bytz") ;; Some packages should only load when I am at home
 #+end_src
 * Performance/Startup optimization
+Don't load outdated bytecode
 #+begin_src elisp
-;; Don't use outdated bytecode
 (setq load-prefer-newer t)
+#+end_src>
 
-;; Performance/startup time increase?
-;; Most popular Emacs distributions use this so hopefully it's good
-(setq gc-cons-threshold 100000000)
+Reduce the frequency of garbage collection to speed up startup time and Emacs
+#+begin_src elisp
+(setq gc-cons-threshold 402653184
+      gc-cons-percentage 0.6)
 #+end_src
+
 * Repositories
 #+begin_src elisp
 ;; Required for package installing etc.
@@ -208,6 +211,10 @@ Has to be loaded as early as possible to affect all packages.
                                                            (shell . t))))
 #+end_src
 
+Org-tempo allows us to expand "<[CHAR]" for different block tags
+#+begin_src elisp
+(use-package org-tempo :ensure nil)
+#+end_src
 * Themes
 #+begin_src elisp
 (use-package gruvbox-theme)
