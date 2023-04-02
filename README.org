@@ -1,0 +1,529 @@
+* Introduction
+These are my Emacs dotfiles. I used to be a Neovim user, and still am, but Emacs is something that intrigued me for a long time.
+
+I used to use distributions for Emacs but I always want to create my own dotfiles.
+Some inspiration from these is probably seen around this config!
+* Personal variables
+#+begin_src elisp
+(setq home-user-name "bytz") ;; Some packages should only load when I am at home
+#+end_src
+* Performance/Startup optimization
+#+begin_src elisp
+;; Don't use outdated bytecode
+(setq load-prefer-newer t)
+
+;; Performance/startup time increase?
+;; Most popular Emacs distributions use this so hopefully it's good
+(setq gc-cons-threshold 100000000)
+#+end_src
+* Repositories
+#+begin_src elisp
+;; Required for package installing etc.
+(require 'package)
+
+;; Repositories
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("gnu" . "https://elpa.gnu.org/packages/")))
+(package-initialize)
+#+end_src
+
+* use-package initialization
+#+begin_src elisp
+;; Install use-package if it isn't installed
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+;; Configure use-package
+(require 'use-package)
+(setq use-package-always-ensure 't)
+#+end_src
+
+* No littering!
+Has to be loaded as early as possible to affect all packages.
+#+begin_src elisp
+(use-package no-littering
+  :demand t
+  :config
+  (setq auto-save-file-name-transforms
+	    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+  (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
+#+end_src
+
+* Load all elisp files from "lisp" directory recursively
+#+begin_src elisp
+(load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
+#+end_src
+
+* Persist *scratch*
+#+begin_src elisp
+;; Preserve scratch buffer
+(me/load-persistent-scratch)
+(push #'me/save-persistent-scratch kill-emacs-hook)
+
+;; Start a timer loop which saves scratch buffer every 2 min
+(if (not (boundp 'save-persistent-scratch-timer))
+    (setq save-persistent-scratch-timer
+          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
+#+end_src
+
+* Indentation
+#+begin_src elisp
+;; indentation
+(setq-default indent-tabs-mode nil
+              tab-width 4)
+(use-package dtrt-indent
+  :config (dtrt-indent-global-mode 1))
+#+end_src
+
+* Meow (modal keybinds)
+#+begin_src elisp
+(use-package meow
+  :config
+  (defun meow-setup ()
+    "Set cheatsheet layout."
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+    (meow-motion-overwrite-define-key
+     '("j" . meow-next)
+     '("k" . meow-prev)
+     '("<escape>" . ignore))
+    (meow-leader-define-key
+     ;; SPC j/k will run the original command in MOTION state.
+     '("j" . "H-j")
+     '("k" . "H-k")
+     ;; Use SPC (0-9) for digit arguments.
+     '("1" . meow-digit-argument)
+     '("2" . meow-digit-argument)
+     '("3" . meow-digit-argument)
+     '("4" . meow-digit-argument)
+     '("5" . meow-digit-argument)
+     '("6" . meow-digit-argument)
+     '("7" . meow-digit-argument)
+     '("8" . meow-digit-argument)
+     '("9" . meow-digit-argument)
+     '("0" . meow-digit-argument)
+     '("/" . meow-keypad-describe-key)
+     '("?" . meow-cheatsheet)
+     '("." . ido-find-file)
+     '("<SPC>" . counsel-ibuffer))
+    (meow-normal-define-key
+     '("M-k" . move-text-up)
+     '("M-j" . move-text-down)
+     '("0" . meow-expand-0)
+     '("9" . meow-expand-9)
+     '("8" . meow-expand-8)
+     '("7" . meow-expand-7)
+     '("6" . meow-expand-6)
+     '("5" . meow-expand-5)
+     '("4" . meow-expand-4)
+     '("3" . meow-expand-3)
+     '("2" . meow-expand-2)
+     '("1" . meow-expand-1)
+     '("-" . negative-argument)
+     '(";" . meow-reverse)
+     '("," . meow-inner-of-thing)
+     '("." . meow-bounds-of-thing)
+     '("[" . meow-beginning-of-thing)
+     '("]" . meow-end-of-thing)
+     '("a" . meow-append)
+     '("A" . meow-open-below)
+     '("b" . meow-back-word)
+     '("B" . meow-back-symbol)
+     '("c" . meow-change)
+     '("d" . meow-delete)
+     '("D" . meow-backward-delete)
+     '("e" . meow-next-word)
+     '("E" . meow-next-symbol)
+     '("f" . meow-find)
+     '("g" . meow-cancel-selection)
+     '("G" . meow-grab)
+     '("h" . meow-left)
+     '("H" . meow-left-expand)
+     '("i" . meow-insert)
+     '("I" . meow-open-above)
+     '("j" . meow-next)
+     '("J" . meow-next-expand)
+     '("k" . meow-prev)
+     '("K" . meow-prev-expand)
+     '("l" . meow-right)
+     '("L" . meow-right-expand)
+     '("m" . meow-join)
+     '("n" . meow-search)
+     '("o" . meow-block)
+     '("O" . meow-to-block)
+     '("p" . meow-yank)
+     '("q" . meow-quit)
+     '("Q" . meow-goto-line)
+     '("r" . meow-replace)
+     '("R" . meow-swap-grab)
+     '("s" . meow-kill)
+     '("t" . meow-till)
+     '("u" . meow-undo)
+     '("v" . meow-visit)
+     '("w" . meow-mark-word)
+     '("W" . meow-mark-symbol)
+     '("x" . meow-line)
+     '("X" . meow-goto-line)
+     '("y" . meow-save)
+     '("Y" . meow-sync-grab)
+     '("z" . meow-pop-selection)
+     '("'" . repeat)
+     '("<escape>" . ignore)))
+  (meow-setup)
+  (meow-global-mode 1))
+#+end_src
+
+* Global miscellaneous keybinds
+#+begin_src elisp
+(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
+(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
+#+end_src
+
+* UndoTree
+#+begin_src elisp
+;; undo
+(use-package undo-tree
+  :bind ("C-r" . undo-tree-redo)
+  :custom (undo-tree-history-directory-alist '(("." . (expand-file-name "undo/" user-emacs-directory))))
+  :config (global-undo-tree-mode))
+#+end_src
+
+* Org-mode
+#+begin_src elisp
+(use-package org
+  :custom
+  (org-startup-indented t)
+  (org-startup-folded t)
+  ;; Disable pesky confirm on elisp evaluation
+  (org-confirm-babel-evaluate nil)
+  ;; Source block indentation is wack by default
+  ;; (org-src-preserve-indentation nil)
+  ;; (org-src-tab-acts-natively t)
+  ;; (org-src-strip-leading-and-trailing-blank-lines t)
+  (org-edit-src-content-indentation 0)
+  :config
+  ;; org-babel languages
+  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                           (C . t)
+                                                           (shell . t))))
+#+end_src
+
+* Themes
+#+begin_src elisp
+(use-package gruvbox-theme)
+(use-package doom-themes
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-enable-italics t))
+
+(load-theme 'gruvbox-dark-soft t) ;; Actually load a theme
+#+end_src
+
+* Configuration
+#+begin_src elisp
+;; No vanilla startup-screen
+(setq inhibit-startup-screen t)
+
+;; Saves recent files in cache
+(recentf-mode 1)
+
+;; Wrap long lines
+(setq truncate-lines t)
+
+;; Setting font
+(set-frame-font "JetBrains Mono 13")
+
+;; Line numbers
+(setq-default display-line-numbers-type 'visual)
+(global-display-line-numbers-mode t)
+
+;; Disabling unimportant GUI stuff
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+
+;; Maximize window on startup
+(toggle-frame-maximized)
+
+;; Give some breathing room to edges
+(set-fringe-mode 10)
+
+;; Always show new lines below cursor
+;; (setq scroll-margin 7)
+
+;; Hightlight entire line cursor is on
+(global-hl-line-mode)
+
+;; No backup files
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+
+;; Don't make new buffers on entering directories
+(setq-default dired-kill-when-opening-new-dired-buffer t)
+
+;; Always gives focus to help windows
+(setq help-window-select t)
+
+;; Answer with y/n to yes/no prompts
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(setq-default apropos-do-all t)
+#+end_src
+
+* Small utility packages
+** Try
+#+begin_src elisp
+(use-package try)
+#+end_src
+
+** Savehist
+#+begin_src elisp
+(use-package savehist
+  :custom
+  (savehist-additional-variables '(compile-command))
+  :config
+  (savehist-mode 1))
+#+end_src
+
+** ace-jump-mode
+#+begin_src elisp
+(use-package ace-jump-mode
+  :bind ("C-c SPC" . ace-jump-mode))
+#+end_src
+
+** rainbow-parenthesis
+#+begin_src elisp
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+  
+** Windmove
+#+begin_src elisp
+(use-package windmove
+  :config (windmove-default-keybindings))
+#+end_src
+
+** electric
+#+begin_src elisp
+(use-package electric
+  :config
+  (electric-pair-mode 1))
+#+end_src
+  
+** wrap-region
+#+begin_src elisp
+(use-package wrap-region
+  :config (wrap-region-mode))
+#+end_src
+
+* Treesitter
+#+begin_src elisp
+(use-package tree-sitter
+  :after (tree-sitter-langs)
+  :config
+  (global-tree-sitter-mode)
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+#+end_src
+
+** Treesitter languages
+#+begin_src elisp
+(use-package tree-sitter-langs)
+#+end_src
+
+* Modeline
+#+begin_src elisp
+(use-package mood-line
+  :config
+  (mood-line-mode 1))
+#+end_src
+
+* LSP mode
+#+begin_src elisp
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :custom
+  (lsp-warn-no-matched-clients nil)
+  :config
+  (setq lsp-headerline-breadcrumb-enable nil)
+  :hook
+  (prog-mode . lsp-deferred)
+  (lsp-mode . lsp-enable-which-key-integration))
+#+end_src
+
+** UI
+#+begin_src elisp
+(use-package lsp-ui
+  :custom
+  (lsp-ui-doc-position 'bottom)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-show-hover nil)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-sideline-show-diagnostics t)
+  :hook (lsp-mode . lsp-ui-mode))
+#+end_src
+
+* Snippets
+#+begin_src elisp
+(use-package yasnippet
+  :after (yasnippet-snippets)
+  :config
+  (yas-reload-all)
+  (add-hook 'prog-mode-hook #'yas-minor-mode))
+
+(use-package yasnippet-snippets)
+#+end_src
+
+* Projectile
+#+begin_src elisp
+(use-package projectile
+  :diminish projectile-mode
+  :custom
+  (projectile-completion-system 'ivy)
+  :bind-keymap ("C-c p" . projectile-command-map)
+  :config
+  (projectile-mode 1))
+#+end_src
+
+* Ivy && Counsel && Swiper
+#+begin_src elisp
+(use-package ivy
+  :custom
+  ;; When line empty and backspace is pressed, don't leave minibuffer
+  (ivy-on-del-error-function 'ignore)
+  :bind (("C-s" . swiper))
+  :config
+  (use-package flx) ;; Great sorting algoritm
+  ;; This didn't work on :custom for some reason
+  (setq ivy-re-builders-alist
+        '((swiper . ivy--regex-fuzzy)
+          (t      . ivy--regex-fuzzy)))
+  (ivy-mode))
+(use-package counsel)
+#+end_src
+
+* Helpful
+#+begin_src elisp
+(use-package helpful
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h k" . helpful-key)
+         ("C-h x" . helpful-command)))
+#+end_src
+
+* Company
+#+begin_src elisp
+(use-package company
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0)
+  (company-tooltip-align-annotations t)
+  ;; Company integration with yasnippet
+  (company-backends '((company-capf :with company-yasnippet)))
+  :hook (after-init . global-company-mode)
+  :config
+  (company-mode 1))
+#+end_src
+
+* Flycheck
+#+begin_src elisp
+(use-package flycheck
+  :hook (after-init . global-flycheck-mode))
+#+end_src
+
+* which-key
+#+begin_src elisp
+(use-package which-key
+  :custom
+  (which-key-popup-type 'minibuffer)
+  :config
+  (which-key-mode))
+#+end_src
+
+* Magit
+Awesome Git client in Emacs Lisp.
+#+begin_src elisp
+(use-package magit
+  :pin melpa
+  :bind (("C-x g" . magit-status)
+         ("C-x C-g" . magit-status)))
+#+end_src
+
+* grip-mode
+#+begin_src elisp
+(use-package grip-mode
+  :init
+  ;; Run pip install if grip python package not found
+  (lambda()
+    (if (not (string-match "grip" (shell-command-to-string "pip list --disable-pip-version-check")))
+	    (start-process "grip-install" nil "pip" "install" "grip")))
+  :hook (markdown-mode . grip-mode))
+#+end_src
+
+* Sly
+REPL for Common Lisp. I will try SLIME later on, because frankly I don't know their differences.
+#+begin_src elisp
+(use-package sly
+  :if (executable-find "sbcl")
+  :custom
+  (sly-complete-symbol-function 'sly-simple-completions)
+  :bind (:map sly-mode-map ("M-h" . sly-documentation-lookup)))
+#+end_src
+
+* Elfeed
+#+begin_src elisp
+(use-package elfeed
+  :if (string= home-user-name (user-login-name))
+  :custom
+  ;; Cleaning up $HOME since automatically saves there
+  (elfeed-db-directory "~/.emacs.d/elfeed")
+  :config
+  ;; Set feeds to monitor
+  (setq elfeed-feeds
+        '("https://www.is.fi/rss/tuoreimmat.xml"
+          "https://reddit.com/r/linux.rss")))
+#+end_src
+
+* Discord Rich Presence
+#+begin_src elisp
+(use-package elcord
+  :if (string= home-user-name (user-login-name))
+  :config
+  (elcord-mode)
+  :custom
+  (elcord-idle-message "Doing something else than coding... lame."))
+#+end_src
+
+* Programming languages
+** Typescript
+#+begin_src elisp
+(use-package typescript-mode
+  :if (executable-find "ts-node")
+  :custom
+  (typescript-indent-level 2))
+
+(use-package tide
+  :if (executable-find "ts-node")
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         (before-save . tide-format-before-save)))
+#+end_src
+** Javascript
+#+begin_src elisp
+(use-package js2-mode
+  :if (executable-find "node"))
+#+end_src
+** Go
+#+begin_src elisp
+(use-package go-mode
+  :if (executable-find "go"))
+#+end_src
+** Lua
+#+begin_src elisp
+(use-package lua-mode
+  :if (executable-find "lua"))
+#+end_src
+
