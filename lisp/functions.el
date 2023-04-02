@@ -56,15 +56,15 @@
   "Write the contents of *scratch* to the file name
 `persistent-scratch-file-name'."
   (with-current-buffer (get-buffer-create "*scratch*")
-    (write-region (point-min) (point-max) (expand-file-name ".persistent-scratch" user-emacs-directory))))
+    (write-region (point-min) (point-max) (expand-file-name "persistent-scratch" no-littering-var-directory))))
 
 (defun me/load-persistent-scratch ()
   "Load the contents of `persistent-scratch-file-name' into the
   scratch buffer, clearing its contents first."
-  (if (file-exists-p (expand-file-name ".persistent-scratch" user-emacs-directory))
+  (if (file-exists-p (expand-file-name "persistent-scratch" no-littering-var-directory))
       (with-current-buffer (get-buffer "*scratch*")
         (delete-region (point-min) (point-max))
-        (insert-file-contents (expand-file-name ".persistent-scratch" user-emacs-directory)))))
+        (insert-file-contents (expand-file-name "persistent-scratch" no-littering-var-directory)))))
 
 (defun me/kill-other-buffers ()
   "kill all other buffers."

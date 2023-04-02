@@ -37,6 +37,12 @@
 (require 'use-package)
 (setq use-package-always-ensure 't)
 
+(use-package no-littering
+  :demand t
+  :config
+   (setq auto-save-file-name-transforms
+	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+
 ;; Load everything on "lisp"-directory (doesn't work so temporary solution...)
 ;; (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
