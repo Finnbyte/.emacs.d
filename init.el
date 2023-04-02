@@ -52,8 +52,7 @@
 
 ;; indentation
 (setq-default indent-tabs-mode nil
-              tab-stop-list ()
-              tab-width  4)
+              tab-width 4)
 (use-package dtrt-indent
   :config (dtrt-indent-global-mode 1))
 
@@ -138,7 +137,7 @@
      '("R" . meow-swap-grab)
      '("s" . meow-kill)
      '("t" . meow-till)
-     '("u" . undo-tree-undo)
+     '("u" . meow-undo)
      '("v" . meow-visit)
      '("w" . meow-mark-word)
      '("W" . meow-mark-symbol)
@@ -159,6 +158,7 @@
 ;; undo
 (use-package undo-tree
   :bind ("C-r" . undo-tree-redo)
+  :custom (undo-tree-history-directory-alist '(("." . (expand-file-name "undo/" user-emacs-directory))))
   :config (global-undo-tree-mode))
 
 (use-package org
@@ -243,6 +243,9 @@
   :config
   (savehist-mode 1))
 
+(use-package windmove
+  :config (windmove-default-keybindings))
+
 (use-package electric
   :config
   (electric-pair-mode 1))
@@ -251,6 +254,7 @@
   :config (wrap-region-mode))
 
 (use-package tree-sitter
+  :after (tree-sitter-langs)
   :config
   (global-tree-sitter-mode)
   :hook (tree-sitter-after-on . tree-sitter-hl-mode))
@@ -260,18 +264,26 @@
   :config
   (mood-line-mode 1))
 
-(use-package undo-fu)
-
 (use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :custom
+  (lsp-warn-no-matched-clients nil)
   :config
-  (setq lsp-headerline-breadcrumb-enable nil))
+  (setq lsp-headerline-breadcrumb-enable nil)
+  :hook
+  (prog-mode . lsp-deferred)
+  (lsp-mode . lsp-enable-which-key-integration))
 
 (use-package lsp-ui
   :custom
+  (lsp-ui-doc-position 'bottom)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-show-hover nil)
   (lsp-ui-sideline-show-hover t)
   (lsp-ui-sideline-show-diagnostics t)
-  :hook (prog-mode . (lambda () (interactive) lsp-ui-mode)))
-
+  :hook (lsp-mode . lsp-ui-mode))
 
 (use-package yasnippet
   :after (yasnippet-snippets)
@@ -281,12 +293,14 @@
 
 (use-package yasnippet-snippets)
 
-;; Fuzzy finding files
+;; Project management etc.
 (use-package projectile
-  :config
-  (projectile-mode 1)
+  :diminish projectile-mode
   :custom
-  (projectile-completion-system 'ivy))
+  (projectile-completion-system 'ivy)
+  :bind-keymap ("C-c p" . projectile-command-map)
+  :config
+  (projectile-mode 1))
 
 ;; Make text navigating a lot easier
 (use-package ace-jump-mode
@@ -318,8 +332,8 @@
 (use-package company
   :custom
   (company-minimum-prefix-length 1)
-  ;; aligns annotation to the right hand side
-  (setq company-tooltip-align-annotations t)
+  (company-idle-delay 0.0)
+  (company-tooltip-align-annotations t)
   ;; Company integration with yasnippet
   (company-backends '((company-capf :with company-yasnippet)))
   :hook (after-init . global-company-mode)
@@ -382,7 +396,10 @@
 
 ;; Typescript
 (use-package typescript-mode
-  :if (executable-find "ts-node"))
+  :if (executable-find "ts-node")
+  :custom
+  (typescript-indent-level 2))
+
 (use-package tide
   :if (executable-find "ts-node")
   :after (typescript-mode company flycheck)
