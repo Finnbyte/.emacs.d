@@ -40,8 +40,9 @@
 (use-package no-littering
   :demand t
   :config
-   (setq auto-save-file-name-transforms
-	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
+  (setq auto-save-file-name-transforms
+	    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+  (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
 
 ;; Load everything on "lisp"-directory (doesn't work so temporary solution...)
 ;; (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
@@ -52,7 +53,7 @@
 (push #'me/save-persistent-scratch kill-emacs-hook)
 
 ;; Start a timer loop which saves scratch buffer every 2 min
-(if (not (boundp 'save-persistent-scratch-timer)) 
+(if (not (boundp 'save-persistent-scratch-timer))
     (setq save-persistent-scratch-timer
           (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
 
@@ -192,9 +193,6 @@
 
 (load-theme 'gruvbox-dark-soft t)
 
-;; Throw everything custom does to another file
-(setq custom-file (expand-file-name ".custom-settings.el" user-emacs-directory))
-
 ;; No vanilla startup-screen
 (setq inhibit-startup-screen t)
 
@@ -217,6 +215,9 @@
 (tool-bar-mode -1)
 (tooltip-mode -1)
 
+;; Maximize window on startup
+(toggle-frame-maximized)
+
 ;; Give some breathing room to edges
 (set-fringe-mode 10)
 
@@ -231,7 +232,7 @@
 (setq auto-save-default nil)
 
 ;; Don't make new buffers on entering directories
-(setq dired-kill-when-opening-new-dired-buffer t)
+(setq-default dired-kill-when-opening-new-dired-buffer t)
 
 ;; Always gives focus to help windows
 (setq help-window-select t)
