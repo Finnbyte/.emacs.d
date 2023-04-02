@@ -1,3 +1,6 @@
+#+TITLE: Finnbyte's .emacs.d
+#+AUTHOR: Finnbyte (Bytz)
+
 * Introduction
 These are my Emacs dotfiles. I used to be a Neovim user, and still am, but Emacs is something that intrigued me for a long time.
 
@@ -11,7 +14,7 @@ Some inspiration from these is probably seen around this config!
 Don't load outdated bytecode
 #+begin_src elisp
 (setq load-prefer-newer t)
-#+end_src>
+#+end_src
 
 Reduce the frequency of garbage collection to speed up startup time and Emacs
 #+begin_src elisp
@@ -414,7 +417,8 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 * Helpful
 #+begin_src elisp
 (use-package helpful
-  :bind (("C-h f" . helpful-callable)
+  :bind (("C-h f" . helpful-function)
+         ("C-h F" . helpful-callable)
          ("C-h v" . helpful-variable)
          ("C-h k" . helpful-key)
          ("C-h x" . helpful-command)))
