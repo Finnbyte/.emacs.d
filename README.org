@@ -1,16 +1,17 @@
 #+TITLE: Finnbyte's .emacs.d
 #+AUTHOR: Finnbyte (Bytz)
-#+STARTUP: showeverything
 
 * Introduction
 These are my Emacs dotfiles. I used to be a Neovim user, and still am, but Emacs is something that intrigued me for a long time.
 
 I used to use distributions for Emacs but I always want to create my own dotfiles.
 Some inspiration from these is probably seen around this config!
+
 * Personal variables
 #+begin_src elisp
 (setq home-user-name "bytz") ;; Some packages should only load when I am at home
 #+end_src
+
 * Performance/Startup optimization
 Don't load outdated bytecode
 #+begin_src elisp
@@ -57,11 +58,26 @@ Has to be loaded as early as possible to affect all packages.
   (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
 #+end_src
 
-* Load all elisp files from "lisp" directory recursively
+* Load all elisp files from "lisp" directory
+Load functions.el first because a lot of stuff depend on its functions
 #+begin_src elisp
 (load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
 #+end_src
 
+Then load everything else...
+#+begin_src elisp
+(let ((dir (expand-file-name "lisp" user-emacs-directory)))
+ (dolist
+     (file (directory-files dir))
+   (when
+       (and (string= "el" (file-name-extension file)) (not (string= file "functions.el")))
+     (load (expand-file-name file dir)))))
+#+end_src
+
+* multi-term
+#+begin_src elisp
+(setq multi-term-program (me/get-shell)) ;; Set shell
+#+end_src
 * Persist *scratch*
 #+begin_src elisp
 ;; Preserve scratch buffer
@@ -75,7 +91,6 @@ Has to be loaded as early as possible to affect all packages.
 #+end_src
 
 * Indentation
-
 #+begin_src elisp
 ;; indentation
 (setq-default indent-tabs-mode nil
@@ -83,6 +98,7 @@ Has to be loaded as early as possible to affect all packages.
 (use-package dtrt-indent
   :config (dtrt-indent-global-mode 1))
 #+end_src
+
 * Keybindings
 ** Meow
 Meow is a fantastic modal mode inside Emacs.
