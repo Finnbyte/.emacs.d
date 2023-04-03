@@ -1,5 +1,6 @@
 #+TITLE: Finnbyte's .emacs.d
 #+AUTHOR: Finnbyte (Bytz)
+#+STARTUP: showeverything
 
 * Introduction
 These are my Emacs dotfiles. I used to be a Neovim user, and still am, but Emacs is something that intrigued me for a long time.
@@ -74,6 +75,7 @@ Has to be loaded as early as possible to affect all packages.
 #+end_src
 
 * Indentation
+
 #+begin_src elisp
 ;; indentation
 (setq-default indent-tabs-mode nil
@@ -81,8 +83,12 @@ Has to be loaded as early as possible to affect all packages.
 (use-package dtrt-indent
   :config (dtrt-indent-global-mode 1))
 #+end_src
+* Keybindings
+** Meow
+Meow is a fantastic modal mode inside Emacs.
+Evil is another extremely popular alternative, and I've used it quite extensively.
 
-* Meow (modal keybinds)
+The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.
 #+begin_src elisp
 (use-package meow
   :config
@@ -178,13 +184,13 @@ Has to be loaded as early as possible to affect all packages.
   (meow-setup)
   (meow-global-mode 1))
 #+end_src
+#+end_src>
 
-* Global miscellaneous keybinds
+** Misc. global
 #+begin_src elisp
 (global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
 (global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
 #+end_src
-
 * UndoTree
 #+begin_src elisp
 ;; undo
@@ -540,4 +546,3 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 (use-package lua-mode
   :if (executable-find "lua"))
 #+end_src
-
