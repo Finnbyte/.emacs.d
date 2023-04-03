@@ -233,6 +233,7 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 * Org-mode
 #+begin_src elisp
 (use-package org
+  :ensure nil
   :custom
   (org-startup-indented t)
   (org-startup-folded t)
@@ -256,13 +257,12 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 #+end_src
 * Themes
 #+begin_src elisp
-(use-package gruvbox-theme)
 (use-package doom-themes
   :custom
   (doom-themes-enable-bold t)
   (doom-themes-enable-italics t))
 
-(load-theme 'gruvbox-dark-soft t) ;; Actually load a theme
+(load-theme 'doom-gruvbox t) ;; Actually load a theme
 #+end_src
 
 * Configuration
@@ -326,6 +326,7 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 ** Savehist
 #+begin_src elisp
 (use-package savehist
+  :ensure nil
   :custom
   (savehist-additional-variables '(compile-command))
   :config
@@ -347,12 +348,14 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 ** Windmove
 #+begin_src elisp
 (use-package windmove
+  :ensure nil
   :config (windmove-default-keybindings))
 #+end_src
 
 ** electric
 #+begin_src elisp
 (use-package electric
+  :ensure nil
   :config
   (electric-pair-mode 1))
 #+end_src
@@ -503,7 +506,7 @@ Install and configure ivy/counsel
 Awesome Git client in Emacs Lisp.
 #+begin_src elisp
 (use-package magit
-  :pin melpa
+    :pin melpa
   :bind (("C-x g" . magit-status)
          ("C-x C-g" . magit-status)))
 #+end_src
