@@ -190,9 +190,12 @@ Has to be loaded as early as possible to affect all packages.
 ;; undo
 (use-package undo-tree
   :bind ("C-r" . undo-tree-redo)
-  :custom (undo-tree-history-directory-alist '(("." . (expand-file-name "undo/" user-emacs-directory))))
+  :custom (undo-tree-auto-save-history nil)
   :config (global-undo-tree-mode))
 #+end_src
+
+#+RESULTS:
+: undo-tree-redo
 
 * Org-mode
 #+begin_src elisp
