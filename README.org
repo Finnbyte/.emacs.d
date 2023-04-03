@@ -431,6 +431,12 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   (projectile-mode 1))
 #+end_src
 
+Adds some extra functionality, including grepping files, which is really important for me.
+#+begin_src elisp
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
+#+end_src
+
 * Ivy && Counsel && Swiper
 #+begin_src elisp
 (use-package ivy
