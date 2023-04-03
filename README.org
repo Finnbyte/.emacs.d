@@ -213,9 +213,11 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 
 ** Misc. global
 #+begin_src elisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit))
 (global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
 (global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
 #+end_src
+
 * UndoTree
 #+begin_src elisp
 ;; undo
@@ -438,6 +440,12 @@ Adds some extra functionality, including grepping files, which is really importa
 #+end_src
 
 * Ivy && Counsel && Swiper
+Set up flx for much better sorting inside ivy
+#+begin_src elisp
+(use-package flx)
+#+end_src
+
+Install and configure ivy/counsel
 #+begin_src elisp
 (use-package ivy
   :custom
@@ -445,7 +453,6 @@ Adds some extra functionality, including grepping files, which is really importa
   (ivy-on-del-error-function 'ignore)
   :bind (("C-s" . swiper))
   :config
-  (use-package flx) ;; Great sorting algoritm
   ;; This didn't work on :custom for some reason
   (setq ivy-re-builders-alist
         '((swiper . ivy--regex-fuzzy)
@@ -457,8 +464,7 @@ Adds some extra functionality, including grepping files, which is really importa
 * Helpful
 #+begin_src elisp
 (use-package helpful
-  :bind (("C-h f" . helpful-function)
-         ("C-h F" . helpful-callable)
+  :bind (("C-h f" . helpful-callable)
          ("C-h v" . helpful-variable)
          ("C-h k" . helpful-key)
          ("C-h x" . helpful-command)))
