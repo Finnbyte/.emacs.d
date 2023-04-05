@@ -9,7 +9,9 @@ Some inspiration from these is probably seen around this config!
 
 * Personal variables
 #+begin_src elisp
-(setq home-user-name "bytz") ;; Some packages should only load when I am at home
+(setq me/home-user-name "bytz") ;; Some packages should only load when I am at home
+(setq me/font-name "Jetbrains Mono")
+(setq me/font-size "14")
 #+end_src
 
 * Performance/Startup optimization
@@ -113,6 +115,25 @@ Also loads these on startup from a file documented in **save-persistent-scratch*
 (setq multi-term-program (me/get-shell)) ;; Set shell
 #+end_src
 
+* Fonts
+Sometimes I am not at home and I don't have my fonts installed.
+We need some checks for those situations!
+
+** Windows
+#+begin_src elisp
+(when (eq 'windows-nt system-type)
+(if (find-font (font-spec :name me/font-name))
+    (set-frame-font (format "%s %s" me/font-name me/font-size))
+  (set-frame-font (format "consolas %s" me/font-size))))
+#+end_src
+
+** Linux
+#+begin_src elisp
+(when (eq 'gnu/linux system-type)
+(if (find-font (font-spec :name me/font-name))
+    (set-frame-font (format "%s %s" me/font-name me/font-size))
+  (set-frame-font (format "DejaVu Sans Mono %s" me/font-size))))
+#+end_src
 * Indentation
 #+begin_src elisp
 ;; indentation
@@ -291,9 +312,6 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 
 ;; Wrap long lines
 (setq truncate-lines t)
-
-;; Setting font
-(set-frame-font "JetBrains Mono 13")
 
 ;; Line numbers
 (setq-default display-line-numbers-type 'visual)
@@ -551,7 +569,7 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 
 * Elfeed
 #+begin_src elisp
-(when (string= home-user-name (user-login-name))
+(when (string= me/home-user-name (user-login-name))
 (use-package elfeed
   :commands elfeed
   :custom
@@ -563,7 +581,7 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 
 * Discord Rich Presence
 #+begin_src elisp
-(when (string= home-user-name (user-login-name))
+(when (string= me/home-user-name (user-login-name))
   (use-package elcord
     :custom
     (elcord-idle-message "Doing something else than coding... lame.")
