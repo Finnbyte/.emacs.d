@@ -426,7 +426,7 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   (lsp-keymap-prefix "C-c l")
   (lsp-headerline-breadcrumb-enable nil)
   :hook
-  (prog-mode . lsp-deferred)
+  (prog-mode . lsp-mode)
   (lsp-mode . lsp-enable-which-key-integration))
 #+end_src
 
@@ -476,8 +476,7 @@ Adds some extra functionality, including grepping files, which is really importa
 * Ivy && Counsel && Swiper
 Set up flx for much better sorting inside ivy
 #+begin_src elisp
-(use-package flx
-  :after (ivy counsel))
+(use-package flx)
 #+end_src
 
 Install and configure ivy/counsel
