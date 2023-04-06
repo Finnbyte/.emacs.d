@@ -1,0 +1,642 @@
+#+TITLE: Finnbyte's .emacs.d
+#+AUTHOR: Finnbyte (Bytz)
+
+* Introduction
+These are my Emacs dotfiles. I used to be a Neovim user, and still am, but Emacs is something that intrigued me for a long time.
+
+I used to use distributions for Emacs but I always want to create my own dotfiles.
+Some inspiration from these is probably seen around this config!
+
+* Elpaca
+#+begin_src elisp
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+#+end_src
+
+* Elpaca-use-package
+#+begin_src elisp
+(setq straight-use-package-by-default t)
+(straight-use-package 'use-package)
+(setq straight-disable-compile t)
+#+end_src
+
+* Personal variables
+#+begin_src elisp
+(setq me/home-user-name "bytz") ;; Some packages should only load when I am at home
+(setq me/font-name "Jetbrains Mono")
+(setq me/font-size "14")
+#+end_src
+
+* Performance/Startup optimization
+** Don't load outdated bytecode
+#+begin_src elisp
+(setq load-prefer-newer t)
+#+end_src
+
+** Startup improvements
+*** GC hacks
+Reduce the frequency of garbage collection to speed up startup time and Emacs
+#+begin_src elisp
+(setq gc-cons-threshold 402653184
+      gc-cons-percentage 0.6)
+#+end_src
+
+*** Benchmark startup time
+#+begin_src elisp
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "*** Emacs loaded in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+#+end_src
+
+* Repositories
+;; Required for package installing etc.
+(require 'package)
+
+;; Repositories
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("gnu" . "https://elpa.gnu.org/packages/")))
+(package-initialize)
+
+* use-package initialization
+;; Install use-package if it isn't installed
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+;; Configure use-package
+(require 'use-package)
+(setq use-package-always-ensure 't)
+(setq use-package-verbose t) ;; debug
+
+* No littering!
+Has to be loaded as early as possible to affect all packages.
+#+begin_src elisp
+(use-package no-littering
+  :demand t
+  :config
+  (setq auto-save-file-name-transforms
+	    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+  (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
+#+end_src
+
+* Load all elisp files from "lisp" directory
+Load functions.el first because a lot of stuff depend on its functions
+#+begin_src elisp
+(load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
+#+end_src
+
+Then load everything else...
+#+begin_src elisp
+(let ((dir (expand-file-name "lisp" user-emacs-directory)))
+ (dolist
+     (file (directory-files dir))
+   (when
+       (and (string= "el" (file-name-extension file)) (not (string= file "functions.el")))
+     (load (expand-file-name file dir)))))
+#+end_src
+
+* *scratch* modifications
+** Make scratch be an org buffer
+#+begin_src elisp
+(setq initial-major-mode 'org-mode)
+#+end_src
+
+** Persist scratch
+Saves scratch contents on exit and every 2 mins.
+Also loads these on startup from a file documented in **save-persistent-scratch**
+#+begin_src elisp
+;; Preserve scratch buffer
+(me/load-persistent-scratch)
+(push #'me/save-persistent-scratch kill-emacs-hook)
+
+;; Start a timer loop which saves scratch buffer every 2 min
+(if (not (boundp 'save-persistent-scratch-timer))
+    (setq save-persistent-scratch-timer
+          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
+#+end_src
+
+* multi-term
+#+begin_src elisp
+(setq multi-term-program (me/get-shell)) ;; Set shell
+#+end_src
+
+* Fonts
+Sometimes I am not at home and I don't have my fonts installed.
+We need some checks for those situations!
+
+** Windows
+#+begin_src elisp
+(when (eq 'windows-nt system-type)
+(if (find-font (font-spec :name me/font-name))
+    (set-frame-font (format "%s %s" me/font-name me/font-size))
+  (set-frame-font (format "consolas %s" me/font-size))))
+#+end_src
+
+** Linux
+#+begin_src elisp
+(when (eq 'gnu/linux system-type)
+(if (find-font (font-spec :name me/font-name))
+    (set-frame-font (format "%s %s" me/font-name me/font-size))
+  (set-frame-font (format "DejaVu Sans Mono %s" me/font-size))))
+#+end_src
+
+* Indentation
+#+begin_src elisp
+;; indentation
+(setq-default indent-tabs-mode nil
+              tab-width 4)
+(use-package dtrt-indent
+  :config (dtrt-indent-global-mode 1))
+#+end_src
+
+* Keybindings
+** Meow
+Meow is a fantastic modal mode inside Emacs.
+Evil is another extremely popular alternative, and I've used it quite extensively.
+
+The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.
+#+begin_src elisp
+(use-package meow
+  :config
+  (defun meow-setup ()
+    "Set cheatsheet layout."
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+    (meow-motion-overwrite-define-key
+     '("j" . meow-next)
+     '("k" . meow-prev)
+     '("<escape>" . ignore))
+    (meow-leader-define-key
+     ;; SPC j/k will run the original command in MOTION state.
+     '("j" . "H-j")
+     '("k" . "H-k")
+     ;; Use SPC (0-9) for digit arguments.
+     '("1" . meow-digit-argument)
+     '("2" . meow-digit-argument)
+     '("3" . meow-digit-argument)
+     '("4" . meow-digit-argument)
+     '("5" . meow-digit-argument)
+     '("6" . meow-digit-argument)
+     '("7" . meow-digit-argument)
+     '("8" . meow-digit-argument)
+     '("9" . meow-digit-argument)
+     '("0" . meow-digit-argument)
+     '("/" . meow-keypad-describe-key)
+     '("?" . meow-cheatsheet)
+     '("." . ido-find-file)
+     '("<SPC>" . counsel-ibuffer))
+    (meow-normal-define-key
+     '("M-k" . move-text-up)
+     '("M-j" . move-text-down)
+     '("0" . meow-expand-0)
+     '("9" . meow-expand-9)
+     '("8" . meow-expand-8)
+     '("7" . meow-expand-7)
+     '("6" . meow-expand-6)
+     '("5" . meow-expand-5)
+     '("4" . meow-expand-4)
+     '("3" . meow-expand-3)
+     '("2" . meow-expand-2)
+     '("1" . meow-expand-1)
+     '("-" . negative-argument)
+     '(";" . meow-reverse)
+     '("," . meow-inner-of-thing)
+     '("." . meow-bounds-of-thing)
+     '("[" . meow-beginning-of-thing)
+     '("]" . meow-end-of-thing)
+     '("a" . meow-append)
+     '("A" . meow-open-below)
+     '("b" . meow-back-word)
+     '("B" . meow-back-symbol)
+     '("c" . meow-change)
+     '("d" . meow-delete)
+     '("D" . meow-backward-delete)
+     '("e" . meow-next-word)
+     '("E" . meow-next-symbol)
+     '("f" . meow-find)
+     '("g" . meow-cancel-selection)
+     '("G" . meow-grab)
+     '("h" . meow-left)
+     '("H" . meow-left-expand)
+     '("i" . meow-insert)
+     '("I" . meow-open-above)
+     '("j" . meow-next)
+     '("J" . meow-next-expand)
+     '("k" . meow-prev)
+     '("K" . meow-prev-expand)
+     '("l" . meow-right)
+     '("L" . meow-right-expand)
+     '("m" . meow-join)
+     '("n" . meow-search)
+     '("o" . meow-block)
+     '("O" . meow-to-block)
+     '("p" . meow-yank)
+     '("q" . meow-quit)
+     '("Q" . meow-goto-line)
+     '("r" . meow-replace)
+     '("R" . meow-swap-grab)
+     '("s" . meow-kill)
+     '("t" . meow-till)
+     '("u" . meow-undo)
+     '("v" . meow-visit)
+     '("w" . meow-mark-word)
+     '("W" . meow-mark-symbol)
+     '("x" . meow-line)
+     '("X" . meow-goto-line)
+     '("y" . meow-save)
+     '("Y" . meow-sync-grab)
+     '("z" . meow-pop-selection)
+     '("'" . repeat)
+     '("<escape>" . ignore)))
+  (meow-setup)
+  (meow-global-mode 1))
+#+end_src
+#+end_src>
+
+** Misc. global
+#+begin_src elisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
+(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
+#+end_src
+
+* undo-tree
+#+begin_src elisp
+(use-package undo-tree
+  :bind ("C-r" . undo-tree-redo)
+  :custom (undo-tree-auto-save-history nil)
+  :config (global-undo-tree-mode))
+#+end_src
+
+* Org-mode
+#+begin_src elisp
+(use-package org
+  :straight (:type built-in)
+  :custom
+  (org-startup-indented t)
+  (org-startup-folded t)
+  ;; Disable pesky confirm on elisp evaluation
+  (org-confirm-babel-evaluate nil)
+  ;; Source block indentation is wack by default
+  ;; (org-src-preserve-indentation nil)
+  ;; (org-src-tab-acts-natively t)
+  ;; (org-src-strip-leading-and-trailing-blank-lines t)
+  (org-edit-src-content-indentation 0)
+  :config
+  ;; org-babel languages
+  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
+                                                           (C . t)
+                                                           (shell . t))))
+#+end_src
+
+Org-tempo allows us to expand "<[CHAR]" for different block tags
+#+begin_src elisp
+(use-package org-tempo
+  :straight (:type built-in)
+  :after org)
+#+end_src
+
+* Themes
+#+begin_src elisp
+(use-package doom-themes
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-enable-italics t))
+
+(load-theme 'doom-gruvbox t) ;; Actually load a theme
+#+end_src
+
+* Configuration
+#+begin_src elisp
+;; No vanilla startup-screen
+(setq inhibit-startup-screen t)
+
+;; No blinking cursor
+(blink-cursor-mode -1)
+
+;; Saves recent files in cache
+(recentf-mode 1)
+
+;; Wrap long lines
+(setq truncate-lines t)
+
+;; Line numbers
+(setq-default display-line-numbers-type 'visual)
+(global-display-line-numbers-mode t)
+
+;; Disabling unimportant GUI stuff
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+
+;; Maximize window on startup
+(toggle-frame-maximized)
+
+;; Give some breathing room to edges
+(set-fringe-mode 10)
+
+;; Always show new lines below cursor
+;; (setq scroll-margin 7)
+
+;; Hightlight entire line cursor is on
+(global-hl-line-mode)
+
+;; No backup files
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+
+;; Don't make new buffers on entering directories
+(setq-default dired-kill-when-opening-new-dired-buffer t)
+
+;; Always gives focus to help windows
+(setq help-window-select t)
+
+;; Answer with y/n to yes/no prompts
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+(setq-default apropos-do-all t)
+#+end_src
+
+* Small utility packages
+** Try
+#+begin_src elisp
+(use-package try :commands try)
+#+end_src
+
+** Savehist
+#+begin_src elisp
+(use-package savehist
+  :straight (:type built-in)
+  :custom
+  (savehist-additional-variables '(compile-command))
+  :config
+  (savehist-mode 1))
+#+end_src
+
+** ace-jump-mode
+#+begin_src elisp
+(use-package ace-jump-mode
+  :bind ("C-c SPC" . ace-jump-mode))
+#+end_src
+
+** rainbow-parenthesis
+#+begin_src elisp
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+  
+** Windmove
+#+begin_src elisp
+(use-package windmove
+  :straight (:type built-in)
+  :config (windmove-default-keybindings))
+#+end_src
+
+** electric
+#+begin_src elisp
+(use-package electric
+  :straight (:type built-in)
+  :config
+  (electric-pair-mode 1))
+#+end_src
+  
+** wrap-region
+#+begin_src elisp
+(use-package wrap-region
+  :config (wrap-region-mode))
+#+end_src
+
+* Treesitter
+(use-package tree-sitter
+  :after (tree-sitter-langs)
+  :config
+  (global-tree-sitter-mode)
+  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
+
+** Treesitter languages
+(use-package tree-sitter-langs)
+
+* Modeline
+#+begin_src elisp
+(use-package mood-line
+  :config
+  (mood-line-mode 1))
+#+end_src
+
+* LSP mode
+#+begin_src elisp
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-warn-no-matched-clients nil)
+  (lsp-keymap-prefix "C-c l")
+  (lsp-headerline-breadcrumb-enable nil)
+  :hook
+  (prog-mode . lsp-mode)
+  (lsp-mode . lsp-enable-which-key-integration))
+#+end_src
+
+** UI
+#+begin_src elisp
+(use-package lsp-ui
+  :custom
+  (lsp-ui-doc-position 'bottom)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-show-hover nil)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-sideline-show-diagnostics t)
+  :hook (lsp-mode . lsp-ui-mode))
+#+end_src
+
+* Snippets
+#+begin_src elisp
+(defun setup/yasnippet ()
+  (yas-reload-all)
+  (yas-minor-mode))
+
+(use-package yasnippet
+  :after yasnippet-snippets
+  :hook (prog-mode . setup/yasnippet))
+
+(use-package yasnippet-snippets)
+#+end_src
+
+* Projectile
+#+begin_src elisp
+(use-package projectile
+  :diminish projectile-mode
+  :custom
+  (projectile-completion-system 'ivy)
+  :bind-keymap ("C-c p" . projectile-command-map)
+  :config
+  (projectile-mode 1))
+#+end_src
+
+Adds some extra functionality, including grepping files, which is really important for me.
+#+begin_src elisp
+(use-package counsel-projectile
+  :after projectile
+  :config (counsel-projectile-mode))
+#+end_src
+
+* Ivy && Counsel && Swiper
+Set up flx for much better sorting inside ivy
+#+begin_src elisp
+(use-package flx)
+#+end_src
+
+Install and configure ivy/counsel
+#+begin_src elisp
+(use-package ivy
+  :custom
+  ;; When line empty and backspace is pressed, don't leave minibuffer
+  (ivy-on-del-error-function 'ignore)
+  (enable-recursive-minibuffers t)
+  :bind (("C-s" . swiper))
+  :config
+  ;; This didn't work on :custom for some reason
+  (setq ivy-re-builders-alist
+        '((swiper . ivy--regex-fuzzy)
+          (t      . ivy--regex-fuzzy)))
+  (ivy-mode))
+(use-package counsel)
+#+end_src
+
+* Helpful
+#+begin_src elisp
+(use-package helpful
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h k" . helpful-key)
+         ("C-h x" . helpful-command)))
+#+end_src
+
+* Company
+#+begin_src elisp
+(defun setup/company-with-goods ()
+  (setq company-backends '((company-capf :with company-yasnippet)))
+  (company-mode 1))
+
+(use-package company
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0)
+  (company-tooltip-align-annotations t)
+  ;; Company integration with yasnippet
+  :hook (prog-mode . setup/company-with-goods))
+#+end_src
+
+* Flycheck
+#+begin_src elisp
+(use-package flycheck
+  :hook (prog-mode . global-flycheck-mode))
+#+end_src
+
+* which-key
+#+begin_src elisp
+(use-package which-key
+  :custom
+  (which-key-popup-type 'minibuffer)
+  :config
+  (which-key-mode))
+#+end_src
+
+* Magit
+Awesome Git client in Emacs Lisp.
+#+begin_src elisp
+(use-package magit
+  :commands magit-status
+  :bind (("C-x g" . magit-status)
+         ("C-x C-g" . magit-status)))
+#+end_src
+
+* grip-mode
+#+begin_src elisp
+(use-package grip-mode
+  :init
+  ;; Run pip install if grip python package not found
+  (lambda()
+    (if (not (string-match "grip" (shell-command-to-string "pip list --disable-pip-version-check")))
+	    (start-process "grip-install" nil "pip" "install" "grip")))
+  :hook (markdown-mode . grip-mode))
+#+end_src
+
+* Sly
+REPL for Common Lisp. I will try SLIME later on, because frankly I don't know their differences.
+#+begin_src elisp
+(when (executable-find "sbcl")
+(use-package sly
+  :commands sly
+  :custom
+  (sly-complete-symbol-function 'sly-simple-completions)
+  :bind (:map sly-mode-map ("M-h" . sly-documentation-lookup))))
+#+end_src
+
+* Elfeed
+#+begin_src elisp
+(when (string= me/home-user-name (user-login-name))
+(use-package elfeed
+  :commands elfeed
+  :custom
+  ;; Cleaning up $HOME since automatically saves there
+  (elfeed-db-directory (expand-file-name "elfeed" no-littering-var-directory))
+  (elfeed-feeds '("https://www.is.fi/rss/tuoreimmat.xml"
+                  "https://reddit.com/r/linux.rss"))))
+#+end_src
+
+* Discord Rich Presence
+#+begin_src elisp
+(when (string= me/home-user-name (user-login-name))
+  (use-package elcord
+    :custom
+    (elcord-idle-message "Doing something else than coding... lame.")
+    :hook (prog-mode . elcord-mode)))
+#+end_src
+
+* Programming languages
+** Typescript
+#+begin_src elisp
+(when (executable-find "ts-node")
+(use-package typescript-mode
+  :custom
+  (typescript-indent-level 2)
+  :mode "\\.ts\\'")
+
+(use-package tide
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         (before-save . tide-format-before-save))))
+#+end_src
+** Javascript
+#+begin_src elisp
+(when (executable-find "ts-node")
+(use-package js2-mode
+  :mode "\\.js\\'"))
+#+end_src
+** Go
+#+begin_src elisp
+(when (executable-find "go")
+(use-package go-mode
+  :mode "\\.go\\'"))
+#+end_src
+** Lua
+#+begin_src elisp
+(when (executable-find "lua")
+(use-package lua-mode
+  :mode "\\.lua\\'"))
+#+end_src
