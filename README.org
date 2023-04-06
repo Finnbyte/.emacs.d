@@ -134,6 +134,7 @@ We need some checks for those situations!
     (set-frame-font (format "%s %s" me/font-name me/font-size))
   (set-frame-font (format "DejaVu Sans Mono %s" me/font-size))))
 #+end_src
+
 * Indentation
 #+begin_src elisp
 ;; indentation
