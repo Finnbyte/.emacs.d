@@ -14,6 +14,13 @@ Some inspiration from these is probably seen around this config!
 (setq me/font-size "14")
 #+end_src
 
+* Set coding system
+UTF-8 is pretty much the standard and best option in many code editors/IDEs.
+So we'll also use that here.
+#+begin_src elisp
+(set-language-environment "UTF-8")
+#+end_src
+
 * Performance/Startup optimization
 ** Don't load outdated bytecode
 #+begin_src elisp
