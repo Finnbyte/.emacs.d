@@ -125,8 +125,11 @@ Also loads these on startup from a file documented in **save-persistent-scratch*
 * Fonts
 Sometimes I am not at home and I don't have my fonts installed.
 We need some checks for those situations!
-
 ** Windows
+Font size is value of ~me/font-size~
+
+Uses ~me/font-name~ if that is found.
+Fallbacks to Consolas.
 #+begin_src elisp
 (when (eq 'windows-nt system-type)
 (if (find-font (font-spec :name me/font-name))
@@ -135,6 +138,10 @@ We need some checks for those situations!
 #+end_src
 
 ** Linux
+Font size is value of ~me/font-size~
+
+Uses ~me/font-name~ if that is found.
+Fallbacks to Dejavu Sans Mono.
 #+begin_src elisp
 (when (eq 'gnu/linux system-type)
 (if (find-font (font-spec :name me/font-name))
