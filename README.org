@@ -9,9 +9,9 @@ Some inspiration from these is probably seen around this config!
 
 * Personal variables
 #+begin_src elisp
-(setq me/home-user-name "bytz") ;; Some packages should only load when I am at home
-(setq me/font-name "Jetbrains Mono")
-(setq me/font-size "14")
+(defconst me/home-user-name "bytz") ;; Some packages should only load when I am at home
+(defconst me/font-name "Jetbrains Mono")
+(defconst me/font-size "14")
 #+end_src
 
 * Set coding system
