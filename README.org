@@ -556,7 +556,9 @@ Awesome Git client in Emacs Lisp.
 (use-package magit
   :commands magit-status
   :bind (("C-x g" . magit-status)
-         ("C-x C-g" . magit-status)))
+         ("C-x C-g" . magit-status)
+         :map magit-mode-map
+         ("0" . magit-discard)))
 #+end_src
 
 * grip-mode
