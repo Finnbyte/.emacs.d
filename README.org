@@ -53,6 +53,7 @@ Reduce the frequency of garbage collection to speed up startup time and Emacs
 
 ;; Repositories
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("nongnu" . "https://nongnu.elpa.org/nongnu/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
 #+end_src
