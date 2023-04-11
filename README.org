@@ -420,16 +420,6 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   :config (wrap-region-mode))
 #+end_src
 
-* Treesitter
-(use-package tree-sitter
-  :after (tree-sitter-langs)
-  :config
-  (global-tree-sitter-mode)
-  :hook (tree-sitter-after-on . tree-sitter-hl-mode))
-
-** Treesitter languages
-(use-package tree-sitter-langs)
-
 * Modeline
 #+begin_src elisp
 (use-package mood-line
