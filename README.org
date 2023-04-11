@@ -170,7 +170,7 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
   :config
   (defun me/meow-undo-redo()
     (interactive)
-    (when (> (string-to-number emacs-version) 28.0) (undo-redo)))
+    (when (> (string-to-number emacs-version) 28.0) (undo-redo 1)))
   (defun meow-setup ()
     "Set cheatsheet layout."
     (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
