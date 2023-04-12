@@ -270,6 +270,7 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 ** Misc. global
 #+begin_src elisp
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+(global-unset-key (kbd "C-l")) ;; Used for LSP
 (global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
 (global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
 #+end_src
@@ -434,23 +435,11 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   :commands (lsp lsp-deferred)
   :custom
   (lsp-warn-no-matched-clients nil)
-  (lsp-keymap-prefix "C-c l")
+  (lsp-keymap-prefix "C-l")
   (lsp-headerline-breadcrumb-enable nil)
   :hook
   (prog-mode . lsp-mode)
   (lsp-mode . lsp-enable-which-key-integration))
-#+end_src
-
-** UI
-#+begin_src elisp
-(use-package lsp-ui
-  :custom
-  (lsp-ui-doc-position 'bottom)
-  (lsp-ui-sideline-enable nil)
-  (lsp-ui-sideline-show-hover nil)
-  (lsp-ui-sideline-show-hover t)
-  (lsp-ui-sideline-show-diagnostics t)
-  :hook (lsp-mode . lsp-ui-mode))
 #+end_src
 
 * Snippets
