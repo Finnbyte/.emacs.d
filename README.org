@@ -14,11 +14,83 @@ Some inspiration from these is probably seen around this config!
 (defconst me/font-size "14")
 #+end_src
 
-* Set coding system
+* Misc. settings
+** Set coding system
 UTF-8 is pretty much the standard and best option in many code editors/IDEs.
 So we'll also use that here.
 #+begin_src elisp
 (set-language-environment "UTF-8")
+#+end_src
+
+** Inhibit startup screen
+#+begin_src elisp
+;; No vanilla startup-screen
+(setq inhibit-startup-screen t)
+#+end_src
+
+** Word wrap
+#+begin_src elisp
+(setq-default word-wrap t)
+#+end_src
+
+** Disable blinking cursor
+#+begin_src elisp
+(blink-cursor-mode -1)
+#+end_src
+
+** Configure recentf
+#+begin_src elisp
+;; Saves recent files in cache
+(recentf-mode 1)
+#+end_src
+
+** Emacs Frame-related
+#+begin_src elisp
+;; Disabling unimportant GUI stuff
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(tooltip-mode -1)
+
+;; Maximize window on startup
+(toggle-frame-maximized)
+
+;; Give some breathing room to edges
+(set-fringe-mode 10)
+#+end_src
+
+** Line numbers
+I use hybrid line numbers because that's just what suits my workflow the best.
+#+begin_src elisp
+(setq-default display-line-numbers-type 'visual)
+(global-display-line-numbers-mode t)
+#+end_src
+
+** Highlight line
+#+begin_src elisp
+(global-hl-line-mode)
+#+end_src
+
+** Disable backups, etc.
+#+begin_src elisp
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+#+end_src
+
+** Dired tweaks
+#+begin_src elisp
+;; Don't make new buffers on entering directories
+(setq-default dired-kill-when-opening-new-dired-buffer t)
+#+end_src
+
+** Give focus to help windows
+#+begin_src elisp
+(setq help-window-select t)
+#+end_src
+
+** y/n alias to yes/no prompts
+#+begin_src elisp
+(defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
 * Performance/Startup optimization
@@ -319,58 +391,6 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   (doom-themes-enable-italics t))
 
 (load-theme 'doom-gruvbox t) ;; Actually load a theme
-#+end_src
-
-* Configuration
-#+begin_src elisp
-;; No vanilla startup-screen
-(setq inhibit-startup-screen t)
-
-;; No blinking cursor
-(blink-cursor-mode -1)
-
-;; Saves recent files in cache
-(recentf-mode 1)
-
-;; Wrap long lines
-(setq truncate-lines t)
-
-;; Line numbers
-(setq-default display-line-numbers-type 'visual)
-(global-display-line-numbers-mode t)
-
-;; Disabling unimportant GUI stuff
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(tooltip-mode -1)
-
-;; Maximize window on startup
-(toggle-frame-maximized)
-
-;; Give some breathing room to edges
-(set-fringe-mode 10)
-
-;; Always show new lines below cursor
-;; (setq scroll-margin 7)
-
-;; Hightlight entire line cursor is on
-(global-hl-line-mode)
-
-;; No backup files
-(setq make-backup-files nil)
-(setq auto-save-default nil)
-
-;; Don't make new buffers on entering directories
-(setq-default dired-kill-when-opening-new-dired-buffer t)
-
-;; Always gives focus to help windows
-(setq help-window-select t)
-
-;; Answer with y/n to yes/no prompts
-(defalias 'yes-or-no-p 'y-or-n-p)
-
-(setq-default apropos-do-all t)
 #+end_src
 
 * Small utility packages
