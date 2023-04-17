@@ -619,7 +619,7 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
   :mode "\\.ts\\'")
 
 (use-package tide
-  :after (typescript-mode company flycheck)
+  :after (typescript-mode flycheck)
   :hook ((typescript-mode . tide-setup)
          (typescript-mode . tide-hl-identifier-mode)
          (before-save . tide-format-before-save))))
