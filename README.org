@@ -207,8 +207,8 @@ Fallbacks to Consolas.
 #+begin_src elisp
 (when (eq 'windows-nt system-type)
 (if (find-font (font-spec :name me/font-name))
-    (set-frame-font (format "%s %s" me/font-name me/font-size))
-  (set-frame-font (format "consolas %s" me/font-size))))
+    (set-frame-font (format "%s %s" me/font-name me/font-size) nil t)
+  (set-frame-font (format "consolas %s" me/font-size) nil t)))
 #+end_src
 
 ** Linux
@@ -219,8 +219,8 @@ Fallbacks to Dejavu Sans Mono.
 #+begin_src elisp
 (when (eq 'gnu/linux system-type)
 (if (find-font (font-spec :name me/font-name))
-    (set-frame-font (format "%s %s" me/font-name me/font-size))
-  (set-frame-font (format "DejaVu Sans Mono %s" me/font-size))))
+    (set-frame-font (format "%s %s" me/font-name me/font-size) nil t)
+  (set-frame-font (format "DejaVu Sans Mono %s" me/font-size) nil t)))
 #+end_src
 
 * Indentation
