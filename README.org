@@ -616,7 +616,7 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 (use-package typescript-mode
   :custom
   (typescript-indent-level 2)
-  :mode "\\.ts\\'")
+  :mode "\\.ts\\'"))
 #+end_src
 
 ** Javascript
