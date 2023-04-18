@@ -27,7 +27,22 @@ So we'll also use that here.
 ;; No vanilla startup-screen
 (setq inhibit-startup-screen t)
 #+end_src
-
+** Improve default debug-on-error
+#+begin_src elisp
+;; Activate globally
+(toggle-debug-on-error)
+;; Make default ignored errors better
+(setq-default debug-ignored-errors
+              '(beginning-of-line
+                beginning-of-buffer
+                ;; end-of-file
+                ;; end-of-line
+                ;; end-of-buffer
+                buffer-read-only
+                file-supersession
+                mark-inactive
+                user-error))
+#+end_src
 ** Word wrap
 #+begin_src elisp
 (setq-default word-wrap t)
