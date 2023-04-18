@@ -617,25 +617,22 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
   :custom
   (typescript-indent-level 2)
   :mode "\\.ts\\'")
-
-(use-package tide
-  :after (typescript-mode flycheck)
-  :hook ((typescript-mode . tide-setup)
-         (typescript-mode . tide-hl-identifier-mode)
-         (before-save . tide-format-before-save))))
 #+end_src
+
 ** Javascript
 #+begin_src elisp
 (when (executable-find "ts-node")
 (use-package js2-mode
   :mode "\\.js\\'"))
 #+end_src
+
 ** Go
 #+begin_src elisp
 (when (executable-find "go")
 (use-package go-mode
   :mode "\\.go\\'"))
 #+end_src
+
 ** Lua
 #+begin_src elisp
 (when (executable-find "lua")
