@@ -27,6 +27,7 @@ So we'll also use that here.
 ;; No vanilla startup-screen
 (setq inhibit-startup-screen t)
 #+end_src
+
 ** Improve default debug-on-error
 #+begin_src elisp
 ;; Activate globally
@@ -133,36 +134,29 @@ Reduce the frequency of garbage collection to speed up startup time and Emacs
                      gcs-done)))
 #+end_src
 
-* Repositories
+* Repositories and leaf
 #+begin_src elisp
-;; Required for package installing etc.
-(require 'package)
-
-;; Repositories
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("nongnu" . "https://nongnu.elpa.org/nongnu/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")))
-(package-initialize)
-#+end_src
-
-* use-package initialization
-#+begin_src elisp
-;; Install use-package if it isn't installed
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-;; Configure use-package
-(require 'use-package)
-(setq use-package-always-ensure 't)
-(setq use-package-verbose t) ;; debug
+(eval-and-compile
+  (customize-set-variable
+   'package-archives '(("org" . "https://orgmode.org/elpa/")
+                       ("melpa" . "https://melpa.org/packages/")
+                       ("gnu" . "https://elpa.gnu.org/packages/")))
+  (package-initialize)
+  (unless (package-installed-p 'leaf)
+    (package-refresh-contents)
+    (package-install 'leaf))
+  (setq leaf-defaults '(:ensure t))
+  (leaf leaf-keywords
+    :ensure t
+    :config
+    ;; initialize leaf-keywords.el
+    (leaf-keywords-init)))
 #+end_src
 
 * No littering!
 Has to be loaded as early as possible to affect all packages.
 #+begin_src elisp
-(use-package no-littering
-  :demand t
+(leaf no-littering
   :config
   (setq auto-save-file-name-transforms
 	    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
@@ -190,7 +184,6 @@ Then load everything else...
 #+begin_src elisp
 (setq initial-major-mode 'org-mode)
 #+end_src
-
 
 ** Persist scratch
 Saves scratch contents on exit and every 2 mins.
@@ -243,7 +236,7 @@ Fallbacks to Dejavu Sans Mono.
 ;; indentation
 (setq-default indent-tabs-mode nil
               tab-width 4)
-(use-package dtrt-indent
+(leaf dtrt-indent
   :config (dtrt-indent-global-mode 1))
 #+end_src
 
@@ -254,14 +247,17 @@ Evil is another extremely popular alternative, and I've used it quite extensivel
 
 The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.
 #+begin_src elisp
-(use-package meow
+(leaf meow
+  :ensure t
+  :require (meow)
+  :custom
+  ((meow-cheatsheet-layout . 'meow-cheatsheet-layout-qwerty))
+  :defun (meow-motion-overwrite-define-key meow-leader-define-key meow-normal-define-key)
   :config
-  (defun me/meow-undo-redo()
+  (defun me/meow-undo-redo ()
     (interactive)
     (when (> (string-to-number emacs-version) 28.0) (undo-redo 1)))
   (defun meow-setup ()
-    "Set cheatsheet layout."
-    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
     (meow-motion-overwrite-define-key
      '("j" . meow-next)
      '("k" . meow-prev)
@@ -352,7 +348,6 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
   (meow-setup)
   (meow-global-mode 1))
 #+end_src
-#+end_src>
 
 ** Misc. global
 #+begin_src elisp
@@ -364,26 +359,25 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 
 * undo-tree
 #+begin_src elisp
-(use-package undo-tree
-  :bind ("C-r" . undo-tree-redo)
-  :custom (undo-tree-auto-save-history nil)
+(leaf undo-tree
+  :custom ((undo-tree-auto-save-history . nil))
   :config (global-undo-tree-mode))
 #+end_src
 
 * Org-mode
 #+begin_src elisp
-(use-package org
+(leaf org
   :ensure nil
   :custom
-  (org-startup-indented t)
-  (org-startup-folded t)
+  ((org-startup-indented . t)
+  (org-startup-folded . t)
   ;; Disable pesky confirm on elisp evaluation
-  (org-confirm-babel-evaluate nil)
+  (org-confirm-babel-evaluate . nil)
   ;; Source block indentation is wack by default
   ;; (org-src-preserve-indentation nil)
   ;; (org-src-tab-acts-natively t)
   ;; (org-src-strip-leading-and-trailing-blank-lines t)
-  (org-edit-src-content-indentation 0)
+  (org-edit-src-content-indentation . 0))
   :config
   ;; org-babel languages
   (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
@@ -393,17 +387,17 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 
 Org-tempo allows us to expand "<[CHAR]" for different block tags
 #+begin_src elisp
-(use-package org-tempo
+(leaf org-tempo
   :ensure nil
   :after org)
 #+end_src
 
 * Themes
 #+begin_src elisp
-(use-package doom-themes
+(leaf doom-themes
   :custom
-  (doom-themes-enable-bold t)
-  (doom-themes-enable-italics t))
+  ((doom-themes-enable-bold . t)
+  (doom-themes-enable-italics . t)))
 
 (load-theme 'doom-gruvbox t) ;; Actually load a theme
 #+end_src
@@ -411,41 +405,41 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 * Small utility packages
 ** Try
 #+begin_src elisp
-(use-package try :commands try)
+(leaf try :commands try)
 #+end_src
 
 ** Savehist
 #+begin_src elisp
-(use-package savehist
+(leaf savehist
   :ensure nil
   :custom
-  (savehist-additional-variables '(compile-command))
+  ((savehist-additional-variables . '(compile-command)))
   :config
   (savehist-mode 1))
 #+end_src
 
 ** ace-jump-mode
 #+begin_src elisp
-(use-package ace-jump-mode
+(leaf ace-jump-mode
   :bind ("C-c SPC" . ace-jump-mode))
 #+end_src
 
 ** rainbow-parenthesis
 #+begin_src elisp
-(use-package rainbow-delimiters
+(leaf rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 #+end_src
   
 ** Windmove
 #+begin_src elisp
-(use-package windmove
+(leaf windmove
   :ensure nil
   :config (windmove-default-keybindings))
 #+end_src
 
 ** electric
 #+begin_src elisp
-(use-package electric
+(leaf electric
   :ensure nil
   :config
   (electric-pair-mode 1))
@@ -453,27 +447,33 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   
 ** wrap-region
 #+begin_src elisp
-(use-package wrap-region
+(leaf wrap-region
   :config (wrap-region-mode))
 #+end_src
 
 * Modeline
 #+begin_src elisp
-(use-package mood-line
+(leaf mood-line
   :config
   (mood-line-mode 1))
 #+end_src
 
 * LSP mode
 #+begin_src elisp
-(use-package lsp-mode
+(defun setup/lsp-mode-with-corfu ()
+  (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(flex)))
+
+(leaf lsp-mode
   :commands (lsp lsp-deferred)
   :custom
-  (lsp-warn-no-matched-clients nil)
-  (lsp-keymap-prefix "C-l")
-  (lsp-headerline-breadcrumb-enable nil)
+  ((lsp-completion-provider . :none)
+  (lsp-warn-no-matched-clients . nil)
+  (lsp-keymap-prefix . "C-l")
+  (lsp-headerline-breadcrumb-enable . nil))
   :hook
   (prog-mode . lsp-mode)
+  (lsp-completion-mode . setup/lsp-mode-with-corfu)
   (lsp-mode . lsp-enable-which-key-integration))
 #+end_src
 
@@ -483,27 +483,25 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   (yas-reload-all)
   (yas-minor-mode))
 
-(use-package yasnippet
+(leaf yasnippet
   :after yasnippet-snippets
   :hook (prog-mode . setup/yasnippet))
 
-(use-package yasnippet-snippets)
+(leaf yasnippet-snippets)
 #+end_src
 
 * Projectile
 #+begin_src elisp
-(use-package projectile
-  :diminish projectile-mode
+(leaf projectile
   :custom
-  (projectile-completion-system 'ivy)
-  :bind-keymap ("C-c p" . projectile-command-map)
-  :config
-  (projectile-mode 1))
+  ((projectile-completion-system . 'ivy))
+  :init (projectile-mode)
+  :bind (:projectile-mode-map ("C-c p" . projectile-command-map)))
 #+end_src
 
 Adds some extra functionality, including grepping files, which is really important for me.
 #+begin_src elisp
-(use-package counsel-projectile
+(leaf counsel-projectile
   :after projectile
   :config (counsel-projectile-mode))
 #+end_src
@@ -511,16 +509,16 @@ Adds some extra functionality, including grepping files, which is really importa
 * Ivy && Counsel && Swiper
 Set up flx for much better sorting inside ivy
 #+begin_src elisp
-(use-package flx)
+(leaf flx)
 #+end_src
 
 Install and configure ivy/counsel
 #+begin_src elisp
-(use-package ivy
+(leaf ivy
   :custom
   ;; When line empty and backspace is pressed, don't leave minibuffer
-  (ivy-on-del-error-function 'ignore)
-  (enable-recursive-minibuffers t)
+  ((ivy-on-del-error-function . 'ignore)
+  (enable-recursive-minibuffers . t))
   :bind (("C-s" . swiper))
   :config
   ;; This didn't work on :custom for some reason
@@ -528,44 +526,116 @@ Install and configure ivy/counsel
         '((swiper . ivy--regex-fuzzy)
           (t      . ivy--regex-fuzzy)))
   (ivy-mode))
-(use-package counsel)
+
+(leaf counsel)
 #+end_src
 
 * Helpful
 #+begin_src elisp
-(use-package helpful
+(leaf helpful
   :bind (("C-h f" . helpful-callable)
          ("C-h v" . helpful-variable)
          ("C-h k" . helpful-key)
          ("C-h x" . helpful-command)))
 #+end_src
 
-* Company
-#+begin_src elisp
+* Company #Disabled
+Currently disabled in favour of corfu.
+
 (defun setup/company-with-goods ()
-  (setq company-backends '((company-capf :with company-yasnippet)))
   (company-mode 1))
 
-(use-package company
+(leaf company
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0)
   (company-tooltip-align-annotations t)
   ;; Company integration with yasnippet
   :hook (prog-mode . setup/company-with-goods))
+
+* Corfu
+#+begin_src elisp
+(defun setup/corfu-with-no-auto ()
+  (setq-local corfu-auto nil)
+  (corfu-mode))
+
+(defun setup/corfu-extensions ()
+  (interactive)
+  (corfu-popupinfo-mode)
+  (corfu-echo-mode))
+
+(defun me/corfu-quit-and-go-normal-mode ()
+  (interactive)
+  (corfu-quit)
+  (meow-insert-exit))
+
+(leaf corfu
+  :custom
+  ((corfu-auto . t) ;; Enable auto completion
+  (corfu-cycle . t) ;; Cycle results
+  (corfu-count . 10) ;; 10 candidates shown
+  (corfu-quit-no-match . t)
+  (corfu-echo-documentation . 0.05)
+  (corfu-popupinfo-delay . nil)
+  (corfu-quit-at-boundary . t) ;; Never quit when reaching boundary
+  (corfu-preselect . 'prompt)
+  (corfu-auto-delay . 0)
+  (corfu-auto-prefix . 0)
+  (completion-styles . '(basic)))
+  :bind
+  ;; Another key binding can be used, such as S-SPC.
+  (:corfu-map
+        ("C-n" . corfu-next)
+        ("C-p" . corfu-previous)
+        ("<return>" . corfu-insert)
+        ("M-d" . corfu-show-documentation)
+        ("M-l" . corfu-show-location)
+        ("<escape>" . me/corfu-quit-and-go-normal-mode))
+  :init
+  (global-corfu-mode)
+  :hook
+  ;; Enable couple useful extensions
+  (corfu-mode . setup/corfu-extensions)
+  ;; Disable auto completion on eshell
+  (eshell-mode . setup/corfu-with-no-auto))
+#+end_src
+
+** Backends
+Backends are delivered by Cape
+#+begin_src elisp
+;; Add extensions
+(leaf cape
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; NOTE: The order matters!
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+  )
 #+end_src
 
 * Flycheck
 #+begin_src elisp
-(use-package flycheck
+(leaf flycheck
   :hook (prog-mode . global-flycheck-mode))
 #+end_src
 
 * which-key
 #+begin_src elisp
-(use-package which-key
+(leaf which-key
   :custom
-  (which-key-popup-type 'minibuffer)
+  ((which-key-popup-type . 'minibuffer))
   :config
   (which-key-mode))
 #+end_src
@@ -573,17 +643,17 @@ Install and configure ivy/counsel
 * Magit
 Awesome Git client in Emacs Lisp.
 #+begin_src elisp
-(use-package magit
+(leaf magit
   :commands magit-status
-  :bind (("C-x g" . magit-status)
+  :bind  (("C-x g" . magit-status)
          ("C-x C-g" . magit-status)
-         :map magit-mode-map
-         ("0" . magit-discard)))
+         (:magit-mode-map
+         ("0" . magit-discard))))
 #+end_src
 
 * grip-mode
 #+begin_src elisp
-(use-package grip-mode
+(leaf grip-mode
   :init
   ;; Run pip install if grip python package not found
   (lambda()
@@ -596,31 +666,31 @@ Awesome Git client in Emacs Lisp.
 REPL for Common Lisp. I will try SLIME later on, because frankly I don't know their differences.
 #+begin_src elisp
 (when (executable-find "sbcl")
-(use-package sly
+(leaf sly
   :commands sly
   :custom
   (sly-complete-symbol-function 'sly-simple-completions)
-  :bind (:map sly-mode-map ("M-h" . sly-documentation-lookup))))
+  :bind (:sly-mode-map ("M-h" . sly-documentation-lookup))))
 #+end_src
 
 * Elfeed
 #+begin_src elisp
 (when (string= me/home-user-name (user-login-name))
-(use-package elfeed
+(leaf elfeed
   :commands elfeed
   :custom
   ;; Cleaning up $HOME since automatically saves there
-  (elfeed-db-directory (expand-file-name "elfeed" no-littering-var-directory))
-  (elfeed-feeds '("https://www.is.fi/rss/tuoreimmat.xml"
-                  "https://reddit.com/r/linux.rss"))))
+  `((elfeed-db-directory . ,(expand-file-name "elfeed" no-littering-var-directory))
+  (elfeed-feeds . '("https://www.is.fi/rss/tuoreimmat.xml"
+                  "https://reddit.com/r/linux.rss")))))
 #+end_src
 
 * Discord Rich Presence
 #+begin_src elisp
 (when (string= me/home-user-name (user-login-name))
-  (use-package elcord
+  (leaf elcord
     :custom
-    (elcord-idle-message "Doing something else than coding... lame.")
+    ((elcord-idle-message . "Doing something else than coding... lame."))
     :hook (prog-mode . elcord-mode)))
 #+end_src
 
@@ -628,29 +698,29 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 ** Typescript
 #+begin_src elisp
 (when (executable-find "ts-node")
-(use-package typescript-mode
+(leaf typescript-mode
   :custom
-  (typescript-indent-level 2)
+  ((typescript-indent-level . 2))
   :mode "\\.ts\\'"))
 #+end_src
 
 ** Javascript
 #+begin_src elisp
 (when (executable-find "ts-node")
-(use-package js2-mode
+(leaf js2-mode
   :mode "\\.js\\'"))
 #+end_src
 
 ** Go
 #+begin_src elisp
 (when (executable-find "go")
-(use-package go-mode
+(leaf go-mode
   :mode "\\.go\\'"))
 #+end_src
 
 ** Lua
 #+begin_src elisp
 (when (executable-find "lua")
-(use-package lua-mode
+(leaf lua-mode
   :mode "\\.lua\\'"))
 #+end_src
