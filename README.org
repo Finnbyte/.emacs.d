@@ -27,6 +27,7 @@ So we'll also use that here.
 ;; No vanilla startup-screen
 (setq inhibit-startup-screen t)
 #+end_src
+
 ** Improve default debug-on-error
 #+begin_src elisp
 ;; Activate globally
