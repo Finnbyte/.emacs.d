@@ -211,75 +211,6 @@ Has to be loaded as early as possible to affect all packages.
     (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
 #+end_src
 
-* Load all elisp files from "lisp" directory
-Load functions.el first because a lot of stuff depend on its functions
-#+begin_src elisp
-(load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
-#+end_src
-
-Then load everything else...
-#+begin_src elisp
-(let ((dir (expand-file-name "lisp" user-emacs-directory)))
- (dolist
-     (file (directory-files dir))
-   (when
-       (and (string= "el" (file-name-extension file)) (not (string= file "functions.el")))
-     (load (expand-file-name file dir)))))
-#+end_src
-
-* *scratch* modifications
-** Make scratch be an org buffer
-#+begin_src elisp
-(setq initial-major-mode 'org-mode)
-#+end_src
-
-
-** Persist scratch
-Saves scratch contents on exit and every 2 mins.
-Also loads these on startup from a file documented in **save-persistent-scratch**
-#+begin_src elisp
-;; Preserve scratch buffer
-(me/load-persistent-scratch)
-(push #'me/save-persistent-scratch kill-emacs-hook)
-
-;; Start a timer loop which saves scratch buffer every 2 min
-(if (not (boundp 'save-persistent-scratch-timer))
-    (setq save-persistent-scratch-timer
-          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
-#+end_src
-
-* multi-term
-#+begin_src elisp
-(setq multi-term-program (me/get-shell)) ;; Set shell
-#+end_src
-
-* Fonts
-Sometimes I am not at home and I don't have my fonts installed.
-We need some checks for those situations!
-** Windows
-Font size is value of ~me/font-size~
-
-Uses ~me/font-name~ if that is found.
-Fallbacks to Consolas.
-#+begin_src elisp
-(when (eq 'windows-nt system-type)
-(if (find-font (font-spec :name me/font-name))
-    (set-frame-font (format "%s %s" me/font-name me/font-size) nil t)
-  (set-frame-font (format "consolas %s" me/font-size) nil t)))
-#+end_src
-
-** Linux
-Font size is value of ~me/font-size~
-
-Uses ~me/font-name~ if that is found.
-Fallbacks to Dejavu Sans Mono.
-#+begin_src elisp
-(when (eq 'gnu/linux system-type)
-(if (find-font (font-spec :name me/font-name))
-    (set-frame-font (format "%s %s" me/font-name me/font-size) nil t)
-  (set-frame-font (format "DejaVu Sans Mono %s" me/font-size) nil t)))
-#+end_src
-
 * Indentation
 #+begin_src elisp
 ;; indentation
@@ -412,58 +343,18 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
   :config (global-undo-tree-mode))
 #+end_src
 
-* Org-mode
-#+begin_src elisp
-(use-package org
-  :ensure nil
-  :custom
-  (org-startup-indented t)
-  (org-startup-folded t)
-  ;; Disable pesky confirm on elisp evaluation
-  (org-confirm-babel-evaluate nil)
-  ;; Source block indentation is wack by default
-  ;; (org-src-preserve-indentation nil)
-  ;; (org-src-tab-acts-natively t)
-  ;; (org-src-strip-leading-and-trailing-blank-lines t)
-  (org-edit-src-content-indentation 0)
-  :config
-  ;; org-babel languages
-  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)
-                                                           (C . t)
-                                                           (shell . t))))
-#+end_src
-
-Org-tempo allows us to expand "<[CHAR]" for different block tags
-#+begin_src elisp
-(use-package org-tempo
-  :ensure nil
-  :after org)
-#+end_src
-
 * Themes
 #+begin_src elisp
 (use-package doom-themes
   :custom
   (doom-themes-enable-bold t)
   (doom-themes-enable-italics t))
-
-(load-theme 'doom-gruvbox t) ;; Actually load a theme
 #+end_src
 
 * Small utility packages
 ** Try
 #+begin_src elisp
 (use-package try :commands try)
-#+end_src
-
-** Savehist
-#+begin_src elisp
-(use-package savehist
-  :ensure nil
-  :custom
-  (savehist-additional-variables '(compile-command))
-  :config
-  (savehist-mode 1))
 #+end_src
 
 ** ace-jump-mode
@@ -476,21 +367,6 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 #+begin_src elisp
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
-#+end_src
-  
-** Windmove
-#+begin_src elisp
-(use-package windmove
-  :ensure nil
-  :config (windmove-default-keybindings))
-#+end_src
-
-** electric
-#+begin_src elisp
-(use-package electric
-  :ensure nil
-  :config
-  (electric-pair-mode 1))
 #+end_src
   
 ** wrap-region
