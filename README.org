@@ -133,70 +133,6 @@ Reduce the frequency of garbage collection to speed up startup time and Emacs
                               (time-subtract after-init-time before-init-time)))
                      gcs-done)))
 #+end_src
-
-* Repositories
-#+begin_src elisp
-;; Required for package installing etc.
-(require 'package)
-
-;; Repositories
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("nongnu" . "https://nongnu.elpa.org/nongnu/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")))
-(package-initialize)
-#+end_src
-
-* No littering!
-Has to be loaded as early as possible to affect all packages.
-#+begin_src elisp
-(load-file (expand-file-name "lisp/no-littering.el" user-emacs-directory))
-(setq auto-save-file-name-transforms
-	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
-(setq custom-file (no-littering-expand-etc-file-name "custom.el")))
-#+end_src
-
-* Load all elisp files from "lisp" directory
-Load functions.el first because a lot of stuff depend on its functions
-#+begin_src elisp
-(load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
-#+end_src
-
-Then load everything else...
-#+begin_src elisp
-(let ((dir (expand-file-name "lisp" user-emacs-directory)))
- (dolist
-     (file (directory-files dir))
-   (when
-       (and (string= "el" (file-name-extension file)) (not (string= file "functions.el")))
-     (load (expand-file-name file dir)))))
-#+end_src
-
-* *scratch* modifications
-** Make scratch be an org buffer
-#+begin_src elisp
-(setq initial-major-mode 'org-mode)
-#+end_src
-
-
-** Persist scratch
-Saves scratch contents on exit and every 2 mins.
-Also loads these on startup from a file documented in **save-persistent-scratch**
-#+begin_src elisp
-;; Preserve scratch buffer
-(me/load-persistent-scratch)
-(push #'me/save-persistent-scratch kill-emacs-hook)
-
-;; Start a timer loop which saves scratch buffer every 2 min
-(if (not (boundp 'save-persistent-scratch-timer))
-    (setq save-persistent-scratch-timer
-          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
-#+end_src
-
-* multi-term
-#+begin_src elisp
-(setq multi-term-program (me/get-shell)) ;; Set shell
-#+end_src
-
 * Fonts
 Sometimes I am not at home and I don't have my fonts installed.
 We need some checks for those situations!
@@ -235,7 +171,7 @@ Fallbacks to Dejavu Sans Mono.
 
 * Ensure elpaca
 #+begin_src elisp
-(defvar elpaca-installer-version 0.4)
+(defvar elpaca-installer-version 0.5)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -285,7 +221,55 @@ Fallbacks to Dejavu Sans Mono.
 ;; Block until current queue processed.
 (elpaca-wait)
 #+end_src
+* No littering!
+Has to be loaded as early as possible to affect all packages.
+#+begin_src elisp
+(use-package no-littering
+  :demand t
+  :config
+  (setq auto-save-file-name-transforms
+	    `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+  (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
+(elpaca-wait)
+#+end_src
+* Load all elisp files from "lisp" directory
+Load functions.el first because a lot of stuff depend on its functions
+#+begin_src elisp
+(load-file (expand-file-name "lisp/functions.el" user-emacs-directory))
+#+end_src
 
+Then load everything else...
+#+begin_src elisp
+(let ((dir (expand-file-name "lisp" user-emacs-directory)))
+ (dolist
+     (file (directory-files dir))
+   (when
+       (and (string= "el" (file-name-extension file)) (not (string= file "functions.el")))
+     (load (expand-file-name file dir)))))
+#+end_src
+
+* *scratch* modifications
+** Make scratch be an org buffer
+#+begin_src elisp
+(setq initial-major-mode 'org-mode)
+#+end_src
+
+
+** Persist scratch
+Saves scratch contents on exit and every 2 mins.
+Also loads these on startup from a file documented in **save-persistent-scratch**
+#+begin_src elisp
+;; Preserve scratch buffer
+(me/load-persistent-scratch)
+(push #'me/save-persistent-scratch kill-emacs-hook)
+
+;; Start a timer loop which saves scratch buffer every 2 min
+(if (not (boundp 'save-persistent-scratch-timer))
+    (setq save-persistent-scratch-timer
+          (run-with-idle-timer 120 t 'me/save-persistent-scratch)))
+#+end_src
+
+* multi-term
 * Keybindings
 ** Meow
 Meow is a fantastic modal mode inside Emacs.
