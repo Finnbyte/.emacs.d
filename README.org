@@ -135,7 +135,7 @@ Reduce the frequency of garbage collection to speed up startup time and Emacs
 #+end_src
 
 * Repositories
-begin_src elisp
+#+begin_src elisp
 ;; Required for package installing etc.
 (require 'package)
 
@@ -144,71 +144,15 @@ begin_src elisp
                          ("nongnu" . "https://nongnu.elpa.org/nongnu/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
-end_src
-
-* Ensure elpaca
-#+begin_src elisp
-(defvar elpaca-installer-version 0.4)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil
-                              :files (:defaults (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                 ((zerop (call-process "git" nil buffer t "clone"
-                                       (plist-get order :repo) repo)))
-                 ((zerop (call-process "git" nil buffer t "checkout"
-                                       (or (plist-get order :ref) "--"))))
-                 (emacs (concat invocation-directory invocation-name))
-                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                 ((require 'elpaca))
-                 ((elpaca-generate-autoloads "elpaca" repo)))
-            (kill-buffer buffer)
-          (error "%s" (with-current-buffer buffer (buffer-string))))
-      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (load "./elpaca-autoloads")))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
-#+end_src
-
-* Initialize use-package with elpaca
-#+begin_src elisp
-;; Install use-package support
-(elpaca elpaca-use-package
-  ;; Enable :elpaca use-package keyword.
-  (elpaca-use-package-mode)
-  ;; Assume :elpaca t unless otherwise specified.
-  (setq elpaca-use-package-by-default t))
-
-;; Block until current queue processed.
-(elpaca-wait)
 #+end_src
 
 * No littering!
 Has to be loaded as early as possible to affect all packages.
 #+begin_src elisp
-  (use-package no-littering
-    :elpaca nil
-    :demand t
-    :config
-    (setq auto-save-file-name-transforms
-	      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
-    (setq custom-file (no-littering-expand-etc-file-name "custom.el")))
+(load-file (expand-file-name "lisp/no-littering.el" user-emacs-directory))
+(setq auto-save-file-name-transforms
+	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+(setq custom-file (no-littering-expand-etc-file-name "custom.el")))
 #+end_src
 
 * Load all elisp files from "lisp" directory
@@ -287,6 +231,59 @@ Fallbacks to Dejavu Sans Mono.
               tab-width 4)
 (use-package dtrt-indent
   :config (dtrt-indent-global-mode 1))
+#+end_src
+
+* Ensure elpaca
+#+begin_src elisp
+(defvar elpaca-installer-version 0.4)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (kill-buffer buffer)
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+#+end_src
+
+* Initialize use-package with elpaca
+#+begin_src elisp
+;; Install use-package support
+(elpaca elpaca-use-package
+  ;; Enable :elpaca use-package keyword.
+  (elpaca-use-package-mode)
+  ;; Assume :elpaca t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
+
+;; Block until current queue processed.
+(elpaca-wait)
 #+end_src
 
 * Keybindings
@@ -394,14 +391,13 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
   (meow-setup)
   (meow-global-mode 1))
 #+end_src
-#+end_src>
 
 ** Misc. global
 #+begin_src elisp
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-(global-unset-key (kbd "C-l")) ;; Used for LSP
-(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
-(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
+;;(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+;;(global-unset-key (kbd "C-l")) ;; Used for LSP
+;;(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
+;;(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
 #+end_src
 
 * undo-tree
@@ -415,7 +411,7 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 * Org-mode
 #+begin_src elisp
 (use-package org
-  :ensure nil
+  :elpaca nil
   :custom
   (org-startup-indented t)
   (org-startup-folded t)
@@ -436,7 +432,7 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
 Org-tempo allows us to expand "<[CHAR]" for different block tags
 #+begin_src elisp
 (use-package org-tempo
-  :ensure nil
+  :elpaca nil
   :after org)
 #+end_src
 
@@ -445,9 +441,9 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 (use-package doom-themes
   :custom
   (doom-themes-enable-bold t)
-  (doom-themes-enable-italics t))
-
-(load-theme 'doom-gruvbox t) ;; Actually load a theme
+  (doom-themes-enable-italics t)
+  :config
+  (load-theme 'doom-gruvbox t))
 #+end_src
 
 * Small utility packages
@@ -459,7 +455,7 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 ** Savehist
 #+begin_src elisp
 (use-package savehist
-  :ensure nil
+  :elpaca nil
   :custom
   (savehist-additional-variables '(compile-command))
   :config
@@ -481,14 +477,14 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 ** Windmove
 #+begin_src elisp
 (use-package windmove
-  :ensure nil
+  :elpaca nil
   :config (windmove-default-keybindings))
 #+end_src
 
 ** electric
 #+begin_src elisp
 (use-package electric
-  :ensure nil
+  :elpaca nil
   :config
   (electric-pair-mode 1))
 #+end_src
