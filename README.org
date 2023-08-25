@@ -649,7 +649,7 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 * Programming languages
 ** Typescript
 #+begin_src elisp
-(when (executable-find "ts-node")
+(when (executable-find "node")
 (use-package typescript-mode
   :custom
   (typescript-indent-level 2)
@@ -658,7 +658,7 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
 
 ** Javascript
 #+begin_src elisp
-(when (executable-find "ts-node")
+(when (executable-find "node")
 (use-package js2-mode
   :mode "\\.js\\'"))
 #+end_src
