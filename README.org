@@ -10,7 +10,7 @@ Some inspiration from these is probably seen around this config!
 * Personal variables
 #+begin_src elisp
 (defconst me/home-user-name "bytz") ;; Some packages should only load when I am at home
-(defconst me/font-name "Jetbrains Mono")
+(defconst me/font-name "Cascadia Code")
 (defconst me/font-size "14")
 #+end_src
 
