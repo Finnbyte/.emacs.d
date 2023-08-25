@@ -488,14 +488,20 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 
 * LSP mode
 #+begin_src elisp
+(defun setup/lsp-mode-with-corfu ()
+  (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(flex)))
+
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :custom
+  ((lsp-completion-provider :none)
   (lsp-warn-no-matched-clients nil)
-  (lsp-keymap-prefix "C-l")
-  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-keymap-prefix "C-c l")
+  (lsp-headerline-breadcrumb-enable nil))
   :hook
   (prog-mode . lsp-mode)
+  (lsp-completion-mode . setup/lsp-mode-with-corfu)
   (lsp-mode . lsp-enable-which-key-integration))
 #+end_src
 
@@ -554,27 +560,77 @@ Install and configure ivy/counsel
 #+end_src
 
 * Helpful
+* Corfu
 #+begin_src elisp
-(use-package helpful
-  :bind (("C-h f" . helpful-callable)
-         ("C-h v" . helpful-variable)
-         ("C-h k" . helpful-key)
-         ("C-h x" . helpful-command)))
+(defun setup/corfu-with-no-auto ()
+  (setq-local corfu-auto nil)
+  (corfu-mode))
+
+(defun setup/corfu-extensions ()
+  (interactive)
+  (corfu-popupinfo-mode)
+  (corfu-echo-mode))
+
+(defun me/corfu-quit-and-go-normal-mode ()
+  (interactive)
+  (corfu-quit)
+  (meow-insert-exit))
+
+(use-package corfu
+  :pin gnu
+  :custom
+  ((corfu-auto t) ;; Enable auto completion
+  (corfu-cycle t) ;; Cycle results
+  (corfu-count 10) ;; 10 candidates shown
+  (corfu-quit-no-match t)
+  (corfu-echo-documentation 0.05)
+  (corfu-popupinfo-delay nil)
+  (corfu-quit-at-boundary t) ;; Never quit when reaching boundary
+  (corfu-preselect 'prompt)
+  (corfu-auto-delay 0)
+  (corfu-auto-prefix 0)
+  (completion-styles '(basic)))
+  :bind
+  ;; Another key binding can be used, such as S-SPC.
+  (:map corfu-map
+        ("C-n" . corfu-next)
+        ("C-p" . corfu-previous)
+        ("<return>" . corfu-insert)
+        ("M-d" . corfu-show-documentation)
+        ("M-l" . corfu-show-location)
+        ("<escape>" . me/corfu-quit-and-go-normal-mode))
+  :init
+  (global-corfu-mode)
+  :hook
+  ;; Enable couple useful extensions
+  ;;(corfu-mode . setup/corfu-extensions)
+  ;; Disable auto completion on eshell
+  (eshell-mode . setup/corfu-with-no-auto))
 #+end_src
 
-* Company
+** Backends
+Backends are delivered by Cape
 #+begin_src elisp
-(defun setup/company-with-goods ()
-  (setq company-backends '((company-capf :with company-yasnippet)))
-  (company-mode 1))
-
-(use-package company
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0)
-  (company-tooltip-align-annotations t)
-  ;; Company integration with yasnippet
-  :hook (prog-mode . setup/company-with-goods))
+;; Add extensions
+(use-package cape
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; NOTE: The order matters!
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+  )
 #+end_src
 
 * Flycheck
@@ -600,9 +656,9 @@ Awesome Git client in Emacs Lisp.
   :bind (("C-x g" . magit-status)
          ("C-x C-g" . magit-status)
          :map magit-mode-map
+         ("<escape>" . keyboard-quit)
          ("0" . magit-discard)))
 #+end_src
-
 * grip-mode
 #+begin_src elisp
 (use-package grip-mode
