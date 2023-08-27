@@ -271,12 +271,43 @@ Also loads these on startup from a file documented in **save-persistent-scratch*
 
 * multi-term
 * Keybindings
+** Evil
+#+begin_src elisp
+(use-package evil
+  :demand t
+  :bind (("<escape>" . keyboard-escape-quit))
+  :init
+  (setq evil-want-keybinding nil) ;; no vim insert bindings
+  ;;(setq evil-undo-system 'undo-fu)
+  :config
+  (evil-mode 1))
+
+(elpaca-wait)
+
+(use-package evil-leader
+  :init
+  (evil-leader/set-leader "<SPC>")
+  (evil-leader/set-key
+    "." 'ido-find-file
+    "<SPC>" 'counsel-ibuffer)
+  :config
+  (global-evil-leader-mode 1))
+
+(use-package evil-collection
+  :after evil
+  :config
+  (setq evil-want-integration t)
+  (evil-collection-init))
+#+end_src
+
 ** Meow
 Meow is a fantastic modal mode inside Emacs.
 Evil is another extremely popular alternative, and I've used it quite extensively.
 
-The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.
-#+begin_src elisp
+~~The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.~~
+Welp, I was wrong. I am way too used to Vim keybinds that I just can't bother learning this.
+I don't usually give up like this but I can't afford the drop on efficiency right now. :(
+#+begin_src elisp :tangle no
 (use-package meow
   :config
   (defun me/meow-undo-redo()
@@ -375,6 +406,8 @@ The problem with it is that it emulates Vim almost *too* good (keybinds clashing
   (meow-setup)
   (meow-global-mode 1))
 #+end_src
+
+#+RESULTS:
 
 ** Misc. global
 #+begin_src elisp
