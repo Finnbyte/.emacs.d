@@ -304,7 +304,7 @@ Also loads these on startup from a file documented in **save-persistent-scratch*
 Meow is a fantastic modal mode inside Emacs.
 Evil is another extremely popular alternative, and I've used it quite extensively.
 
-~~The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.~~
+;; The problem with it is that it emulates Vim almost *too* good (keybinds clashing etc.). I want my Emacs to be Emacs.
 Welp, I was wrong. I am way too used to Vim keybinds that I just can't bother learning this.
 I don't usually give up like this but I can't afford the drop on efficiency right now. :(
 #+begin_src elisp :tangle no
