@@ -285,12 +285,11 @@ Also loads these on startup from a file documented in **save-persistent-scratch*
 (elpaca-wait)
 
 (use-package evil-leader
-  :init
+  :config
   (evil-leader/set-leader "<SPC>")
   (evil-leader/set-key
     "." 'ido-find-file
     "<SPC>" 'counsel-ibuffer)
-  :config
   (global-evil-leader-mode 1))
 
 (use-package evil-collection
