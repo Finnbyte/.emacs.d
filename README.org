@@ -611,6 +611,7 @@ Install and configure ivy/counsel
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.0)
   (company-tooltip-align-annotations t)
+  (company-selection-wrap-around t)
   ;; Company integration with yasnippet
   :hook (prog-mode . setup/company-with-goods))
 #+end_src
