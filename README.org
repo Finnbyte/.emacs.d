@@ -1,5 +1,6 @@
 #+TITLE: Finnbyte's .emacs.d
 #+AUTHOR: Finnbyte (Bytz)
+#+PROPERTY: header-args    :results silent
 
 * Introduction
 These are my Emacs dotfiles. I used to be a Neovim user, and still am, but Emacs is something that intrigued me for a long time.
