@@ -278,39 +278,39 @@ Also loads these on startup from a file documented in **save-persistent-scratch*
 * Keybindings
 ** Evil
 #+begin_src elisp
-(use-package evil
-  :demand t
-  :bind (("<escape>" . keyboard-escape-quit))
-  :init
-  (setq evil-want-keybinding nil) ;; no vim insert bindings
-  ;;(setq evil-undo-system 'undo-fu)
-  :config
-  (evil-mode 1))
+  (use-package evil
+    :demand t
+    :bind (("<escape>" . keyboard-escape-quit))
+    :init
+    (setq evil-want-keybinding nil) ;; no vim insert bindings
+    :config
+    (evil-set-undo-system 'undo-redo) ;; Requires Emacs 28
+    (evil-mode 1))
 
-(elpaca-wait)
+  (elpaca-wait)
 
-(use-package evil-leader
-  :config
-  (evil-leader/set-leader "<SPC>")
-  (evil-leader/set-key
-    "." 'ido-find-file
-    "<SPC>" 'counsel-ibuffer)
-  (global-evil-leader-mode 1))
+  (use-package evil-leader
+    :config
+    (evil-leader/set-leader "<SPC>")
+    (evil-leader/set-key
+      "." 'ido-find-file
+      "<SPC>" 'counsel-ibuffer)
+    (global-evil-leader-mode 1))
 
-(defun keybinds/evil-dired ()
-  (evil-define-key 'normal dired-mode-map
-  "l" 'dired-find-file
-  "h" 'dired-up-directory))
+  (defun keybinds/evil-dired ()
+    (evil-define-key 'normal dired-mode-map
+    "l" 'dired-find-file
+    "h" 'dired-up-directory))
 
-(use-package evil-collection
-  :config
-  (setq evil-want-integration t)
-  (evil-collection-init)
-  (keybinds/evil-dired))
+  (use-package evil-collection
+    :config
+    (setq evil-want-integration t)
+    (evil-collection-init)
+    (keybinds/evil-dired))
 
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode 1))
+  (use-package evil-surround
+    :config
+    (global-evil-surround-mode 1))
 #+end_src
 
 ** Meow
