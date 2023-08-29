@@ -59,6 +59,11 @@ So we'll also use that here.
 (blink-cursor-mode -1)
 #+end_src
 
+** Make clipboard behave like Vim's
+#+begin_src elisp
+(setq x-select-enable-clipboard nil)
+#+end_src
+
 ** Configure recentf
 #+begin_src elisp
 ;; Saves recent files in cache
