@@ -749,6 +749,10 @@ REPL for Common Lisp. I will try SLIME later on, because frankly I don't know th
   :mode "\\.go\\'"))
 #+end_src
 
+** Dart
+#+begin_src elisp
+(use-package lsp-dart)
+#+end_src
 ** Lua
 #+begin_src elisp
 (when (executable-find "lua")
