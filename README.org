@@ -614,18 +614,23 @@ Install and configure ivy/counsel
 
 (use-package company
   :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0)
+  (company-minimum-prefix-length 0)
+  (company-idle-delay 0.01)
   (company-tooltip-align-annotations t)
   (company-selection-wrap-around t)
   ;; Company integration with yasnippet
   :hook (prog-mode . setup/company-with-goods))
+
+(use-package company-quickhelp
+  :custom
+  (company-quickhelp-delay 0.01)
+  :hook (company-mode . company-quickhelp-mode))
 #+end_src
 
 * Flycheck
 #+begin_src elisp
 (use-package flycheck
-  :hook (prog-mode . global-flycheck-mode))
+  :hook (prog-mode . flycheck-mode))
 #+end_src
 
 * which-key
