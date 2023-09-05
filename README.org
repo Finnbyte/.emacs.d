@@ -427,10 +427,11 @@ I don't usually give up like this but I can't afford the drop on efficiency righ
 
 ** Misc. global
 #+begin_src elisp
+(global-set-key (kbd "C-y") 'clipboard-yank)
 ;;(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 ;;(global-unset-key (kbd "C-l")) ;; Used for LSP
-;;(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
-;;(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
+(global-unset-key (kbd "C-z")) ;; Extremely annoying to accidentally press this instead of C-x
+(global-unset-key (kbd "C-r")) ;; Obsolete as C-s uses swiper
 #+end_src
 
 * undo-tree
