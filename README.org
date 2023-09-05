@@ -32,7 +32,7 @@ So we'll also use that here.
 ** Improve default debug-on-error
 #+begin_src elisp
 ;; Activate globally
-(toggle-debug-on-error)
+;; (toggle-debug-on-error)
 ;; Make default ignored errors better
 (setq-default debug-ignored-errors
               '(beginning-of-line
