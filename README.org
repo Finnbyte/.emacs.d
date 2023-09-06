@@ -533,12 +533,18 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
 #+end_src
 
 * LSP mode
+** Increase the amount of data which emacs reads from the process
+#+begin_src elisp
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
+#+end_src
+
+** Installation
 #+begin_src elisp
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :custom
   (lsp-warn-no-matched-clients nil)
-  (lsp-keymap-prefix "C-l")
+  (lsp-keymap-prefix "C-c l")
   (lsp-headerline-breadcrumb-enable nil)
   :hook
   (prog-mode . lsp-mode)
@@ -564,6 +570,7 @@ Org-tempo allows us to expand "<[CHAR]" for different block tags
   :diminish projectile-mode
   :custom
   (projectile-completion-system 'ivy)
+  (projectile-indexing-method 'alien)
   :bind-keymap ("C-c p" . projectile-command-map)
   :config
   (projectile-mode 1))
@@ -617,7 +624,8 @@ Install and configure ivy/counsel
 (use-package company
   :custom
   (company-minimum-prefix-length 0)
-  (company-idle-delay 0.01)
+  (company-dabbrev-downcase 0)
+  (company-idle-delay 0)
   (company-tooltip-align-annotations t)
   (company-selection-wrap-around t)
   ;; Company integration with yasnippet
