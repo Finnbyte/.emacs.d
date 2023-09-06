@@ -624,8 +624,10 @@ Install and configure ivy/counsel
 (use-package company
   :custom
   (company-minimum-prefix-length 0)
+  (company-insertion-on-trigger 'company-explicit-action-p)
+  (company-auto-select-first-candidate nil)
   (company-dabbrev-downcase 0)
-  (company-idle-delay 0)
+  (company-idle-delay 0.1)
   (company-tooltip-align-annotations t)
   (company-selection-wrap-around t)
   ;; Company integration with yasnippet
